@@ -77,7 +77,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -85,7 +85,7 @@
             "description": "Create the `users` table in PostgreSQL as specified. Implement the corresponding `User` JPA entity class and the `UserRepository` Spring Data interface.",
             "dependencies": [],
             "details": "Define the `users` table with columns: `id` (PK), `username` (unique), `telegram_recipients`, `telegram_chat_id` (nullable), `created_at`, and `updated_at`. Create a `User` entity mapping these columns. Create a `UserRepository` interface extending `JpaRepository` and add a `findByUsername(String username)` method.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test to persist a `User` entity, then retrieve it by its ID and by its username to verify data integrity and query method functionality."
           },
           {
@@ -94,7 +94,7 @@
             "description": "Create the `events` table in PostgreSQL as specified. Implement the corresponding `Event` JPA entity class and the `EventRepository` Spring Data interface.",
             "dependencies": [],
             "details": "Define the `events` table with columns: `id` (PK), `system_name`, `event_name`, `kafka_topic`, `description`, `created_at`, and `updated_at`. Create an `Event` entity mapping these columns. Create an `EventRepository` interface extending `JpaRepository`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test to save a new `Event` entity to the database and retrieve it by its ID, verifying all fields are correctly persisted and read."
           },
           {
@@ -106,7 +106,7 @@
               2
             ],
             "details": "Define the `subscriptions` table with columns: `id` (PK), `user_id` (FK to users.id), `event_id` (FK to events.id), and `created_at`. Add a unique constraint on (`user_id`, `event_id`). Create the `Subscription` entity with `@ManyToOne` annotations for the `user` and `event` fields, using `@JoinColumn` to specify the foreign key columns.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Initial validation will occur in subsequent tasks. A basic test can be written to persist a `Subscription` entity after creating and persisting a `User` and an `Event`."
           },
           {
@@ -117,7 +117,7 @@
               3
             ],
             "details": "In the `User` entity, add a `Set<Subscription> subscriptions` field annotated with `@OneToMany(mappedBy = \"user\", cascade = CascadeType.ALL, orphanRemoval = true)`. In the `Event` entity, add a `Set<Subscription> subscriptions` field annotated with `@OneToMany(mappedBy = \"event\", cascade = CascadeType.ALL, orphanRemoval = true)`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test that creates a user and an event, then creates a subscription linking them. Retrieve the user and verify its `subscriptions` collection is not empty and contains the correct subscription. Do the same for the event."
           },
           {
@@ -128,7 +128,7 @@
               4
             ],
             "details": "Create a `SubscriptionRepository` interface extending `JpaRepository`. Add a method `findByUserIdAndEventId(Long userId, Long eventId)` to the `SubscriptionRepository` to leverage the unique constraint for lookups. Verify all three repositories are complete.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test for the `findByUserIdAndEventId` method. Create a user, event, and subscription, then use the method with their IDs to retrieve the specific subscription and assert it is correct."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T14:55:27.141Z",
+      "updated": "2025-06-29T15:54:36.027Z",
       "description": "Tasks for master context"
     }
   }
