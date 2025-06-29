@@ -483,7 +483,7 @@
           6,
           7
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -491,7 +491,7 @@
             "description": "Establish the foundational Spring for Apache Kafka configuration. This includes setting up dependencies, defining consumer factory properties, and creating a basic, static listener to verify connectivity with the Kafka cluster.",
             "dependencies": [],
             "details": "1. Add the `spring-kafka` dependency to the project's build file.\n2. In `application.yml`, configure the Kafka bootstrap servers, a default consumer group ID, key/value deserializers (e.g., `StringDeserializer`), and the auto offset reset policy to `earliest`.\n3. Create a `KafkaConsumerConfig` class to define the `ConsumerFactory` and `ConcurrentKafkaListenerContainerFactory` beans.\n4. Implement a temporary test listener using the `@KafkaListener` annotation on a method to consume from a hardcoded topic to validate the setup.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the application and use a Kafka command-line tool to produce a message to the test topic. Verify that the application's logs show the message being successfully consumed by the static listener."
           },
           {
@@ -502,7 +502,7 @@
               1
             ],
             "details": "1. Create a `KafkaListenerService` interface and its implementation.\n2. Inject `KafkaListenerEndpointRegistry` and the `ConcurrentKafkaListenerContainerFactory` bean from subtask 1.\n3. Implement `startListeningToTopic(String topic)`: This method will programmatically create a `ConcurrentMessageListenerContainer` for the specified topic, assign a unique container ID, set its message listener, register it with the registry, and start it.\n4. Implement `stopListeningToTopic(String topic)`: This method will find the listener container by its ID in the registry and stop it.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests that call `startListeningToTopic`, produce a message to that topic, and assert that it's received. Then, call `stopListeningToTopic` and verify that subsequent messages are not received. Mock the `KafkaListenerEndpointRegistry` in unit tests."
           },
           {
@@ -513,7 +513,7 @@
               2
             ],
             "details": "1. Implement the `processMessage(String topic, String message)` method within `KafkaListenerService`. This method will be invoked by the dynamically created listeners.\n2. Use a JSON library (e.g., Jackson) to parse the incoming message string into a data transfer object (DTO).\n3. Based on the topic name, query the database to find the associated event and all users subscribed to it.\n4. For each subscribed user, format a notification string according to predefined templates.\n5. Call an existing `TelegramNotificationService` to send the formatted message to each user's Telegram ID.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the `processMessage` method extensively. Mock the database repository and the `TelegramNotificationService`. Provide various message payloads and verify that the correct database queries are made and the notification service is called with the expected formatted messages."
           },
           {
@@ -524,7 +524,7 @@
               3
             ],
             "details": "1. Configure a `DefaultErrorHandler` on the `ConcurrentKafkaListenerContainerFactory` bean.\n2. Set up a `FixedBackOff` policy for retries (e.g., 3 attempts with a 2-second interval) to handle transient exceptions like database connection issues.\n3. Configure the error handler to publish messages that fail after all retries to a designated Dead-Letter Topic (DLT), e.g., `original-topic.DLT`.\n4. Ensure that non-retriable exceptions, such as message parsing errors (`JsonParseException`), skip the retry logic and are sent directly to the DLT.\n5. Add comprehensive logging for retry attempts and messages moved to the DLT.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "In an integration test, send a message that causes a mocked transient exception; verify that retry attempts are logged and the message is eventually processed. Send a malformed JSON message and verify it is immediately published to the DLT without retries."
           },
           {
@@ -536,7 +536,7 @@
               3
             ],
             "details": "1. Create a component that implements Spring's `ApplicationListener<ApplicationReadyEvent>`.\n2. Inject the database repository for events and the `KafkaListenerService`.\n3. In the `onApplicationEvent` method, fetch all active event topics from the database.\n4. Iterate through the list of topics and invoke `kafkaListenerService.startListeningToTopic(topic)` for each one.\n5. Add logging to confirm which topics are being subscribed to during the application startup sequence.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "For an integration test, pre-populate the test database with several active event topics. Start the application and verify through logs that the startup listener identifies all topics and successfully initiates a consumer for each one. You can also inspect the `KafkaListenerEndpointRegistry` to confirm the containers are registered and running."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T18:12:16.929Z",
+      "updated": "2025-06-29T19:09:32.714Z",
       "description": "Tasks for master context"
     }
   }
