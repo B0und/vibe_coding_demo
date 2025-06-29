@@ -44,6 +44,9 @@ public class SecurityConfig {
             
             // Configure authorization rules
             .authorizeHttpRequests(authz -> authz
+                // Allow public access to login endpoint
+                .requestMatchers("/api/users/login").permitAll()
+                
                 // Allow public access to registration endpoint
                 .requestMatchers("/api/users/register").permitAll()
                 

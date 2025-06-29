@@ -29,20 +29,23 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Register a new user with the given username
-     * @param username the username for the new user
-     * @return the created user
-     * @throws IllegalArgumentException if username is null, empty, or already exists
+     * Register a new user with the given username, or return existing user if already exists
+     * @param username the username for the user
+     * @return the user (either newly created or existing)
+     * @throws IllegalArgumentException if username is null or empty
      */
     public User registerUser(String username) {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
 
-        if (userRepository.existsByUsername(username.trim())) {
-            throw new IllegalArgumentException("Username already exists: " + username);
+        // Check if user already exists and return it
+        Optional<User> existingUser = userRepository.findByUsername(username.trim());
+        if (existingUser.isPresent()) {
+            return existingUser.get();
         }
 
+        // Create new user if doesn't exist
         User user = new User(username.trim());
         return userRepository.save(user);
     }

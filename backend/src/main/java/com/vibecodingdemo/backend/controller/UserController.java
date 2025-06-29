@@ -27,6 +27,44 @@ public class UserController {
         this.jwtUtil = jwtUtil;
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginUserRequest request) {
+        try {
+            // Validate request
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Username is required"));
+            }
+
+            // Find the user
+            Optional<User> userOpt = userService.findByUsername(request.getUsername());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404)
+                    .body(Map.of("error", "User not found"));
+            }
+
+            User user = userOpt.get();
+
+            // Generate JWT token
+            String token = jwtUtil.generateToken(user.getUsername());
+
+            // Prepare response
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "createdAt", user.getCreatedAt()
+            ));
+            response.put("token", token);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Login failed"));
+        }
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterUserRequest request) {
         try {
@@ -183,6 +221,25 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Failed to activate Telegram bot"));
+        }
+    }
+
+    // DTO class for login request
+    public static class LoginUserRequest {
+        private String username;
+
+        public LoginUserRequest() {}
+
+        public LoginUserRequest(String username) {
+            this.username = username;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
         }
     }
 

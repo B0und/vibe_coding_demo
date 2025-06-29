@@ -312,16 +312,34 @@ export interface AuthUser {
 
 export const authApi = {
   async login(username: string): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>('/api/users/register', {
-      username: username.trim()
-    });
-    
-    // Store the token in localStorage
-    if (response.token) {
-      localStorage.setItem('authToken', response.token);
+    try {
+      // Try to register the user (works for both new and existing users in our system)
+      const response = await apiClient.post<LoginResponse>('/api/users/register', {
+        username: username.trim()
+      });
+      
+      // Store the token in localStorage
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+      }
+      
+      return response;
+    } catch (error) {
+      // If we get "Username already exists" error, provide a helpful message
+      if (error instanceof ApiClientError && 
+          error.status === 400 && 
+          error.message.includes('Username already exists')) {
+        
+        throw new ApiClientError(
+          `The username "${username.trim()}" is already taken. This system currently only supports registration of new users. Please try a different username or contact support if this is your account.`,
+          400,
+          'USERNAME_EXISTS'
+        );
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
-    
-    return response;
   },
 
   async getCurrentUser(): Promise<AuthUser> {
