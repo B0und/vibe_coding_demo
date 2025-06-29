@@ -277,7 +277,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -285,7 +285,7 @@
             "description": "Create the core data structures for the event management feature. This includes the database entity, the data transfer objects for API communication, and the mapping logic between them.",
             "dependencies": [],
             "details": "Create the `Event` JPA entity with fields: id, systemName, eventName, kafkaTopic, description, createdAt, and updatedAt. Implement `EventDTO` for request bodies and `EventResponseDTO` for responses. Set up a mapper (e.g., using MapStruct or a manual helper class) to convert between the `Event` entity and the DTOs.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the mapper to ensure all fields are correctly transferred between the entity and DTOs in both directions."
           },
           {
@@ -296,7 +296,7 @@
               1
             ],
             "details": "Create an `EventRepository` interface that extends a Spring Data JPA repository (e.g., `JpaRepository<Event, Long>`). This will provide standard CRUD methods (save, findById, findAll, deleteById) out of the box without needing a concrete implementation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test using an in-memory database (like H2) to verify that the repository can successfully save and retrieve an Event entity."
           },
           {
@@ -307,7 +307,7 @@
               2
             ],
             "details": "In `EventService`, inject the `EventRepository` and the mapper. Implement the logic for `createEvent(EventDTO)`, `getEventById(Long)`, `getAllEvents()`, and `deleteEvent(Long)`. The `createEvent` method should map the DTO to an entity and save it. The 'get' methods should retrieve data from the repository and map it to response DTOs. The `deleteEvent` method will use the repository to remove an event by its ID.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the `EventService` using a mocked `EventRepository`. Verify that the correct repository methods are called and that the service correctly handles data mapping and returns the expected DTOs."
           },
           {
@@ -318,7 +318,7 @@
               3
             ],
             "details": "Implement the `updateEvent(Long id, EventDTO)` method in `EventService`. This method should first retrieve the existing event, update its fields from the provided DTO, and then save the changes. Add validation annotations (e.g., `@NotBlank`, `@NotNull`) to the fields in `EventDTO` to ensure that all required data is present and valid for both create and update operations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the `updateEvent` service logic with a mocked repository. Write integration tests that attempt to create/update events with invalid data (e.g., empty fields) to ensure a 400 Bad Request response is returned."
           },
           {
@@ -329,7 +329,7 @@
               4
             ],
             "details": "Create the `EventController` with endpoints for GET, POST, PUT, and DELETE, mapping to `/api/events` and `/api/events/{id}`. Each controller method will call the corresponding `EventService` method. Create a `@ControllerAdvice` class to handle exceptions globally. Specifically, handle `ResourceNotFoundException` to return a 404 status and `MethodArgumentNotValidException` (for validation failures) to return a 400 status with a descriptive error message.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests for each endpoint. Test the success cases (e.g., creating an event returns 201, getting an event returns 200 with the correct body) and failure cases (e.g., getting a non-existent event returns 404, creating with bad data returns 400)."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T16:45:31.016Z",
+      "updated": "2025-06-29T16:52:19.991Z",
       "description": "Tasks for master context"
     }
   }
