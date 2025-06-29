@@ -72,4 +72,11 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * @return number of subscriptions for the event
      */
     long countByEventId(Long eventId);
+    
+    /**
+     * Count distinct users with active subscriptions
+     * @return number of unique users with at least one subscription
+     */
+    @Query("SELECT COUNT(DISTINCT s.user.id) FROM Subscription s")
+    long countDistinctUsers();
 } 

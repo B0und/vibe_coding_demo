@@ -15,6 +15,17 @@ export interface ApiError {
   details?: unknown;
 }
 
+export interface ClientErrorReport {
+  message: string;
+  stack?: string;
+  url: string;
+  componentStack?: string;
+  props?: Record<string, unknown>;
+  timestamp: string;
+  userAgent?: string;
+  critical?: boolean;
+}
+
 // Custom error class for API errors
 export class ApiClientError extends Error implements ApiError {
   status?: number;
@@ -215,6 +226,22 @@ class ApiClient {
 
   logout(): void {
     localStorage.removeItem('authToken');
+  }
+
+  // Error Reporting API Method
+  
+  /**
+   * Report client-side errors to the backend for logging
+   * @param errorReport - The error report to send
+   * @returns Promise<void>
+   */
+  async reportError(errorReport: ClientErrorReport): Promise<void> {
+    try {
+      await this.post<void>('/api/v1/client-errors', errorReport);
+    } catch (error) {
+      // Silently fail error reporting to prevent infinite loops
+      console.warn('Failed to report error to backend:', error);
+    }
   }
 
   // Subscription Management API Methods

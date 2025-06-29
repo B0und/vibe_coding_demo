@@ -1245,7 +1245,7 @@
           8,
           15
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1253,7 +1253,7 @@
             "description": "Establish the core error handling mechanism on the backend by creating a global exception handler using @ControllerAdvice and defining custom exception classes for specific business and technical errors.",
             "dependencies": [],
             "details": "Create a class annotated with @ControllerAdvice to centralize exception handling. Implement custom exception classes such as ResourceNotFoundException, ValidationException, and ExternalServiceException. Define @ExceptionHandler methods for these custom exceptions and common Spring exceptions. Ensure these handlers return a standardized JSON error response, including an appropriate HTTP status code and a user-friendly message. Configure the handler to sanitize sensitive error details in the production environment to prevent information leakage.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the @ControllerAdvice class, mocking controller methods that throw various exceptions to verify that the correct handler is invoked and the expected HTTP status and response body are returned. Create integration tests that trigger real error scenarios via API endpoints."
           },
           {
@@ -1264,7 +1264,7 @@
               1
             ],
             "details": "Add SLF4J and Logback dependencies. Create a logback-spring.xml configuration file to define appenders and log formats. Use a JSON encoder (e.g., logstash-logback-encoder) to output logs in a structured JSON format. Implement a Spring MVC interceptor or filter to populate the Mapped Diagnostic Context (MDC) with contextual information like a unique request ID and authenticated user ID for every request. Configure log levels (INFO, WARN, ERROR) for different packages. Set up a rolling file appender with policies for log rotation and retention.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "During development, manually inspect console and file logs to verify they are in the correct JSON format and contain all required contextual fields (requestId, userId). Write a unit test to ensure the MDC interceptor correctly adds and clears contextual data before and after a request."
           },
           {
@@ -1275,7 +1275,7 @@
               1
             ],
             "details": "Create a React Error Boundary component to wrap the main application layout, which will catch JavaScript errors during rendering and display a generic fallback UI. Use try/catch blocks within async functions (e.g., API calls) to handle promise rejections and server errors. Create a dedicated backend endpoint (e.g., POST /api/v1/client-errors) that accepts error details from the frontend. Implement a frontend utility to send the error stack and component context to this endpoint. Ensure UI components display clear, non-technical error messages to the user based on API responses.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use React Testing Library to test that the Error Boundary renders its fallback UI when a child component throws an error. Use a mocking library like MSW (Mock Service Worker) or Jest's mocking capabilities to simulate API failures and verify that user-friendly error messages are displayed. Write an E2E test (e.g., with Cypress) to confirm that a caught frontend error triggers a network request to the backend reporting endpoint."
           },
           {
@@ -1286,7 +1286,7 @@
               1
             ],
             "details": "Integrate the Spring Boot Actuator dependency. Enable and secure the /actuator/health and /actuator/prometheus endpoints. Create custom HealthIndicator beans to check the status of critical dependencies like the database, Kafka, and the Telegram API. Use Micrometer to create and register custom metrics, such as counters for specific business events or error types identified in the global exception handler. Ensure metrics like HTTP request counts, error rates, and latency are exposed via the Prometheus endpoint.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually curl the /actuator/health endpoint to check the application's overall status and the status of its dependencies. Write integration tests for the custom HealthIndicators, mocking the dependent services to simulate both healthy and unhealthy states. Scrape the /actuator/prometheus endpoint to verify that custom metrics are present and correctly formatted."
           },
           {
@@ -1298,7 +1298,7 @@
               2
             ],
             "details": "Add the Resilience4j dependency. Identify all service methods that make network calls to external dependencies. Annotate these methods with @CircuitBreaker, configuring properties like failureRateThreshold and waitDurationInOpenState in application.yml. For each protected method, implement a corresponding fallback method using the `fallbackMethod` attribute. This fallback should execute alternative logic, such as returning a default value, queuing the request for later, or logging a critical error without failing the entire user request. Ensure fallback executions are logged appropriately.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests where the external service client is mocked to throw exceptions. Verify that after a configured number of failures, the circuit breaker opens and subsequent calls immediately invoke the fallback method. Use Awaitility to test that the circuit breaker transitions back to half-open and then closed after the configured wait duration has passed and the external service becomes healthy again."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T19:09:32.714Z",
+      "updated": "2025-06-29T19:20:14.682Z",
       "description": "Tasks for master context"
     }
   }

@@ -6,6 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ErrorProvider, ErrorToast } from "./contexts/ErrorContext";
 import { ApiClientError } from "./api/client";
+import { errorReporter } from "./utils/errorReporting";
+
+// Initialize error reporting (sets up global error handlers)
+errorReporter.setEnabled(true);
 
 // Configure QueryClient with global error handling
 const queryClient = new QueryClient({
