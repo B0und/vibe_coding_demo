@@ -224,7 +224,7 @@ class ApiClient {
    * @returns Promise<Event[]>
    */
   async getEvents(): Promise<Event[]> {
-    return this.get<Event[]>('/events');
+    return this.get<Event[]>('/api/events');
   }
 
   /**
@@ -232,7 +232,7 @@ class ApiClient {
    * @returns Promise<Subscription[]>
    */
   async getUserSubscriptions(): Promise<Subscription[]> {
-    return this.get<Subscription[]>('/subscriptions');
+    return this.get<Subscription[]>('/api/subscriptions');
   }
 
   /**
@@ -241,7 +241,7 @@ class ApiClient {
    * @returns Promise<Subscription>
    */
   async subscribeToEvent(eventId: number): Promise<Subscription> {
-    return this.post<Subscription>(`/subscriptions/${eventId}`);
+    return this.post<Subscription>(`/api/subscriptions/${eventId}`);
   }
 
   /**
@@ -250,7 +250,7 @@ class ApiClient {
    * @returns Promise<void>
    */
   async unsubscribeFromEvent(eventId: number): Promise<void> {
-    return this.delete<void>(`/subscriptions/${eventId}`);
+    return this.delete<void>(`/api/subscriptions/${eventId}`);
   }
 
   /**
@@ -259,7 +259,7 @@ class ApiClient {
    * @returns Promise<{eventId: number, subscribed: boolean}>
    */
   async getSubscriptionStatus(eventId: number): Promise<{eventId: number, subscribed: boolean}> {
-    return this.get<{eventId: number, subscribed: boolean}>(`/subscriptions/${eventId}/status`);
+    return this.get<{eventId: number, subscribed: boolean}>(`/api/subscriptions/${eventId}/status`);
   }
 }
 
@@ -285,7 +285,7 @@ export interface AuthUser {
 
 export const authApi = {
   async login(username: string): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>('/users/register', {
+    const response = await apiClient.post<LoginResponse>('/api/users/register', {
       username: username.trim()
     });
     
@@ -298,7 +298,7 @@ export const authApi = {
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    return apiClient.get<AuthUser>('/users/me');
+    return apiClient.get<AuthUser>('/api/users/me');
   },
 
   logout(): void {
