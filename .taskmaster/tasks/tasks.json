@@ -346,7 +346,7 @@
           3,
           5
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -354,7 +354,7 @@
             "description": "Create the `Subscription` JPA entity to model the relationship between a user and an event, and implement the `SubscriptionRepository` for database operations.",
             "dependencies": [],
             "details": "The `Subscription` entity should include fields for an auto-generated ID, a ManyToOne relationship to the `User` entity, and a ManyToOne relationship to the `Event` entity. A unique constraint should be added on the combination of user and event to prevent duplicate subscriptions. The `SubscriptionRepository` will extend `JpaRepository` and include custom query methods like `findByUserAndEvent` and `findAllByUser`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write repository-level tests using an in-memory database (like H2) to verify that subscriptions can be created, retrieved by user, retrieved by user and event combination, and deleted successfully. Test the unique constraint violation."
           },
           {
@@ -365,7 +365,7 @@
               1
             ],
             "details": "The `SubscriptionDTO` should contain `id`, `eventId`, `eventName`, `systemName`, and a `subscribed` boolean flag. The `getUserSubscriptions` method will fetch all subscriptions for a user and map them to a list of `SubscriptionDTOs`. The `isUserSubscribed` method will efficiently check for the existence of a subscription record and return a boolean.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the service methods by mocking the `SubscriptionRepository`. Verify that `getUserSubscriptions` correctly transforms `Subscription` entities into `SubscriptionDTOs`. Test `isUserSubscribed` for both true and false scenarios."
           },
           {
@@ -376,7 +376,7 @@
               1
             ],
             "details": "The `subscribeToEvent` method must first check if the event exists and if the user is already subscribed, throwing custom exceptions (`EventNotFoundException`, `AlreadySubscribedException`) if necessary. The `unsubscribeFromEvent` method must check if the user is actually subscribed before attempting deletion, throwing `NotSubscribedException` if not. Both methods will interact with the `UserRepository`, `EventRepository`, and `SubscriptionRepository`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the service methods, mocking all repository dependencies. Create test cases for successful subscription and unsubscription. Crucially, test all failure paths: subscribing to a non-existent event, subscribing when already subscribed, and unsubscribing when not subscribed."
           },
           {
@@ -388,7 +388,7 @@
               3
             ],
             "details": "Create a REST controller with the following mappings: `GET /api/subscriptions` (calls `getUserSubscriptions`), `POST /api/subscriptions/{eventId}` (calls `subscribeToEvent`), `DELETE /api/subscriptions/{eventId}` (calls `unsubscribeFromEvent`), and `GET /api/subscriptions/{eventId}/status` (calls `isUserSubscribed`). Each method will obtain the current principal's username from the `SecurityContextHolder` to enforce that users can only manage their own subscriptions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use MockMvc to write integration tests for the controller layer. Mock the `SubscriptionService` to isolate the controller's responsibility. Test each endpoint for correct HTTP method mapping, path variable handling, and that the authenticated user's name is correctly passed to the service layer. Verify expected success status codes (200 OK, 201 Created, 204 No Content)."
           },
           {
@@ -399,7 +399,7 @@
               4
             ],
             "details": "Implement a global exception handler to catch `EventNotFoundException`, `AlreadySubscribedException`, and `NotSubscribedException`, returning appropriate HTTP status codes (404, 409, 404 respectively) and a consistent JSON error response body. Secure the endpoints using Spring Security to ensure all requests are authenticated.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "For the exception handler, update MockMvc tests to trigger exceptions from the mocked service and assert that the correct HTTP status and error response are returned. For security, write integration tests using Spring Security's test support (`@WithMockUser`) to verify that authenticated users can access the endpoints and unauthenticated requests receive a 401 Unauthorized or 403 Forbidden status."
           }
         ]
@@ -965,7 +965,7 @@
           9,
           10
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -984,7 +984,7 @@
               1
             ],
             "details": "Implement a request interceptor to automatically retrieve an authentication token (e.g., from localStorage) and add it to the `Authorization` header of every outgoing request. Implement a response interceptor to parse and return `response.data` on success, and to normalize the error object on failure, ensuring a consistent error structure for downstream handlers.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "For the request interceptor, test that the `Authorization` header is correctly added when a token exists. For the response interceptor, mock a successful response and assert that only the `data` is returned. Mock an error response and assert that the rejected promise contains a standardized error object."
           },
           {
@@ -995,7 +995,7 @@
               2
             ],
             "details": "Within the response error handler, add logic to inspect `error.response.status`. For common client/server errors (403, 404, 500), format a user-friendly error message. For authentication errors (401), prepare a specific error type to trigger re-authentication. Integrate a library like `axios-retry` to automatically retry requests that fail due to transient issues (e.g., 502, 503, network error) using an exponential backoff strategy.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock API responses with status codes 401, 403, 404, and 500 to verify that the interceptor formats and propagates the correct error types. To test retries, mock a 503 response and assert that the client re-attempts the request the configured number of times."
           },
           {
@@ -1006,7 +1006,7 @@
               3
             ],
             "details": "Create an `ErrorContext` and an `ErrorProvider` to manage a global error state. The API client's error interceptor will push formatted errors into this context. Implement a consumer component, such as an `ErrorToast`, to display these errors to the user. The provider will also contain logic to listen for 401 errors and trigger a redirect to the login page.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Using React Testing Library, wrap a test component in the `ErrorProvider`. Trigger a mocked API error and verify that the `ErrorToast` component renders with the correct message. Separately, test that when a 401 error is dispatched to the context, the application attempts to redirect (using a mock router)."
           },
           {
@@ -1018,7 +1018,7 @@
               4
             ],
             "details": "Develop the `useApi` hook that returns the fully configured API client instance. Integrate request cancellation logic using Axios's `AbortController`. The hook should provide an easy way to make API calls from components, where loading states can be managed locally, but errors are automatically handled by the global `ErrorContext`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write a unit test for the hook to ensure it provides the API client methods. Use React Testing Library to test a component that utilizes the `useApi` hook. Verify that it can successfully fetch data. Test the cancellation logic by initiating a request and then triggering the cancellation, asserting that the request is aborted."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T17:47:47.844Z",
+      "updated": "2025-06-29T17:58:05.654Z",
       "description": "Tasks for master context"
     }
   }
