@@ -1,0 +1,358 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Project Setup and Configuration",
+        "description": "Initialize the project repository with the required structure and configuration files for both frontend and backend components.",
+        "details": "Create a new Git repository with the following structure:\n\n```\n/\n├── frontend/          # React frontend application\n├── backend/           # Spring Boot backend application\n├── docker-compose.yml # Docker configuration for local development\n└── README.md          # Project documentation\n```\n\nSetup the frontend project with React, TypeScript, TailwindCSS, React Router, Zustand, @tanstack/query, and shadcn components as specified in the PRD.\n\nSetup the backend project with Java 17, Spring Boot 3.x, Spring for Apache Kafka, and Spring Data JPA.\n\nCreate a docker-compose.yml file that includes services for:\n- Frontend (React in development mode)\n- Backend (Java Spring Boot)\n- PostgreSQL database\n- Apache Kafka and Zookeeper\n\nCreate initial README.md with setup instructions.",
+        "testStrategy": "Verify that all services start correctly with 'docker-compose up' command. Ensure the frontend development server is accessible, the backend server starts without errors, and the database and Kafka services are properly initialized. Test connectivity between services to ensure they can communicate with each other.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Database Schema Design and Implementation",
+        "description": "Design and implement the database schema for storing user profiles, event definitions, and subscriptions.",
+        "details": "Create the following PostgreSQL database tables:\n\n1. `users` table:\n   - `id` (Primary Key)\n   - `username` (String, unique)\n   - `telegram_recipients` (String, semicolon-separated list)\n   - `telegram_chat_id` (String, nullable)\n   - `created_at` (Timestamp)\n   - `updated_at` (Timestamp)\n\n2. `events` table:\n   - `id` (Primary Key)\n   - `system_name` (String)\n   - `event_name` (String)\n   - `kafka_topic` (String)\n   - `description` (Text)\n   - `created_at` (Timestamp)\n   - `updated_at` (Timestamp)\n\n3. `subscriptions` table:\n   - `id` (Primary Key)\n   - `user_id` (Foreign Key to users.id)\n   - `event_id` (Foreign Key to events.id)\n   - `created_at` (Timestamp)\n   - Unique constraint on (user_id, event_id)\n\nImplement JPA entity classes for each table with appropriate relationships:\n- One-to-many relationship between User and Subscription\n- One-to-many relationship between Event and Subscription\n\nCreate Spring Data JPA repositories for each entity with necessary query methods.",
+        "testStrategy": "Write unit tests for each repository to verify CRUD operations. Test the relationships between entities to ensure they are properly mapped. Verify constraints like unique usernames and subscription uniqueness. Create integration tests that use an in-memory H2 database to test the entire persistence layer.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Backend Authentication Service",
+        "description": "Implement a simple authentication service for user identification based on username as specified in the PRD.",
+        "details": "Create an authentication service with the following features:\n\n1. Create a `UserService` class that handles:\n   - User registration with just a username (no password required for MVP)\n   - User lookup by username\n   - Session management using JWT tokens\n\n2. Implement a `UserController` with endpoints:\n   - POST `/api/users/register` - Register a new user with a username\n   - GET `/api/users/me` - Get current user information\n\n3. Create a simple JWT-based authentication filter that:\n   - Validates JWT tokens in request headers\n   - Sets the authenticated user in the SecurityContext\n\n4. Configure Spring Security to:\n   - Allow anonymous access to registration endpoint\n   - Require authentication for all other endpoints\n   - Use stateless sessions\n\nStore user information in the database using the User entity created in Task 2.",
+        "testStrategy": "Write unit tests for the UserService to verify user registration and lookup functionality. Create integration tests for the authentication flow, including token generation and validation. Test the security configuration to ensure proper endpoint protection. Verify that the JWT token contains the necessary user information and has appropriate expiration settings.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "User Profile Management API",
+        "description": "Implement the backend API for managing user profiles, including Telegram recipient settings.",
+        "details": "Extend the `UserService` and `UserController` to handle profile management:\n\n1. Add methods to `UserService`:\n   - `updateTelegramRecipients(String username, String recipients)` - Update the semicolon-separated list of Telegram recipients\n   - `generateTelegramActivationCode(String username)` - Generate a unique one-time code for Telegram bot activation\n   - `activateTelegramBot(String code, String chatId)` - Link a Telegram chat ID to a user account using the activation code\n\n2. Add endpoints to `UserController`:\n   - PUT `/api/users/profile/telegram-recipients` - Update Telegram recipients\n   - POST `/api/users/profile/telegram-activation-code` - Generate activation code\n   - POST `/api/users/telegram-activate` - Activate Telegram bot (called by the Telegram bot service)\n\n3. Implement a simple in-memory cache for storing activation codes with expiration (e.g., using Caffeine cache).\n\nEnsure all endpoints are properly secured and only allow users to modify their own profile information.",
+        "testStrategy": "Write unit tests for the profile management methods in UserService. Test the activation code generation and validation logic, including expiration handling. Create integration tests for the API endpoints to verify proper authorization (users can only modify their own profiles). Test the Telegram recipient validation and formatting.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Event Management API",
+        "description": "Implement the backend API for managing event definitions in the system.",
+        "details": "Create an event management service and controller:\n\n1. Implement `EventService` with methods:\n   - `getAllEvents()` - Get all events\n   - `getEventById(Long id)` - Get event by ID\n   - `createEvent(EventDTO event)` - Create a new event\n   - `updateEvent(Long id, EventDTO event)` - Update an existing event\n   - `deleteEvent(Long id)` - Delete an event\n\n2. Create `EventController` with endpoints:\n   - GET `/api/events` - Get all events\n   - GET `/api/events/{id}` - Get event by ID\n   - POST `/api/events` - Create a new event\n   - PUT `/api/events/{id}` - Update an event\n   - DELETE `/api/events/{id}` - Delete an event\n\n3. Implement DTOs for request/response:\n   - `EventDTO` with fields: systemName, eventName, kafkaTopic, description\n   - `EventResponseDTO` with fields: id, systemName, eventName, kafkaTopic, description, createdAt, updatedAt\n\n4. Add validation for event creation/update:\n   - All fields are required\n   - System name, event name, and Kafka topic must not be empty\n\nEnsure proper error handling and response status codes.",
+        "testStrategy": "Write unit tests for the EventService to verify CRUD operations. Create integration tests for the API endpoints to ensure proper validation and error handling. Test edge cases like duplicate events, invalid input data, and non-existent event IDs. Verify that events are properly persisted in the database.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Subscription Management API",
+        "description": "Implement the backend API for managing user subscriptions to events.",
+        "details": "Create a subscription management service and controller:\n\n1. Implement `SubscriptionService` with methods:\n   - `getUserSubscriptions(String username)` - Get all subscriptions for a user\n   - `subscribeToEvent(String username, Long eventId)` - Subscribe a user to an event\n   - `unsubscribeFromEvent(String username, Long eventId)` - Unsubscribe a user from an event\n   - `isUserSubscribed(String username, Long eventId)` - Check if a user is subscribed to an event\n\n2. Create `SubscriptionController` with endpoints:\n   - GET `/api/subscriptions` - Get current user's subscriptions\n   - POST `/api/subscriptions/{eventId}` - Subscribe to an event\n   - DELETE `/api/subscriptions/{eventId}` - Unsubscribe from an event\n   - GET `/api/subscriptions/{eventId}/status` - Check subscription status\n\n3. Implement DTOs for response:\n   - `SubscriptionDTO` with fields: id, eventId, eventName, systemName, subscribed\n\n4. Add proper error handling for cases like:\n   - Event not found\n   - Already subscribed/not subscribed\n\nEnsure that users can only manage their own subscriptions.",
+        "testStrategy": "Write unit tests for the SubscriptionService to verify subscription operations. Create integration tests for the API endpoints to ensure proper authorization and error handling. Test edge cases like subscribing to non-existent events and duplicate subscriptions. Verify that subscription changes are properly persisted in the database.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Telegram Bot Integration",
+        "description": "Implement the Telegram bot service for sending notifications to users.",
+        "details": "Create a Telegram bot service that handles user activation and message sending:\n\n1. Register a new Telegram bot using BotFather and obtain the API token.\n\n2. Implement `TelegramBotService` with methods:\n   - `sendMessage(String chatId, String message)` - Send a formatted message to a Telegram chat\n   - `handleStartCommand(String chatId, String text)` - Process the /start command with activation code\n\n3. Create a Spring component that listens for Telegram bot updates:\n   - Use the Telegram Bot API to receive updates\n   - Handle the /start command with activation code format: `/start <code>`\n   - Call the UserService to activate the bot with the provided code and chat ID\n\n4. Implement message formatting:\n   - Convert JSON messages to human-readable format\n   - Format as specified in the PRD (key-value pairs with emoji header)\n\n5. Add error handling and retry mechanism:\n   - Implement exponential backoff for failed message delivery\n   - Log failed delivery attempts\n\nEnsure the bot is properly configured in the application properties.",
+        "testStrategy": "Write unit tests for the TelegramBotService to verify message formatting and sending functionality. Mock the Telegram API to test the bot's response to different commands. Test the activation code validation logic. Create integration tests that verify the end-to-end flow from receiving a /start command to activating a user's account. Test the retry mechanism with simulated failures.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Kafka Consumer Implementation",
+        "description": "Implement the Kafka consumer service that listens to topics and processes messages for notification delivery.",
+        "details": "Create a Kafka consumer service that dynamically subscribes to topics and processes messages:\n\n1. Implement `KafkaListenerService` with methods:\n   - `startListeningToTopic(String topic)` - Start a consumer for a specific topic\n   - `stopListeningToTopic(String topic)` - Stop a consumer for a specific topic\n   - `processMessage(String topic, String message)` - Process a received message\n\n2. Create a dynamic Kafka listener configuration:\n   - Use Spring Kafka's `KafkaListenerEndpointRegistry` and `ConcurrentMessageListenerContainer`\n   - Dynamically register and unregister listeners based on the events in the database\n\n3. Implement message processing logic:\n   - Parse the message (assuming JSON format)\n   - Find all users subscribed to the event associated with the topic\n   - Format the message according to the specified format\n   - Send the formatted message to all Telegram recipients for each subscribed user\n\n4. Add a startup listener that initializes consumers for all existing topics in the database.\n\n5. Implement error handling and retry mechanism for message processing failures.\n\nEnsure proper configuration for Kafka consumer properties (group ID, auto-offset reset, etc.).",
+        "testStrategy": "Write unit tests for the KafkaListenerService to verify message processing logic. Create integration tests with an embedded Kafka broker to test the end-to-end flow from message arrival to notification delivery. Test dynamic listener registration and unregistration. Verify error handling and retry mechanisms. Test with various message formats to ensure robust parsing.",
+        "priority": "high",
+        "dependencies": [
+          5,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Frontend Project Structure and Routing",
+        "description": "Set up the frontend project structure and implement routing for the application.",
+        "details": "Set up the React frontend project with the following structure and routing:\n\n1. Initialize the React project with TypeScript, TailwindCSS, and required dependencies:\n   - React Router for routing\n   - Zustand for state management\n   - @tanstack/query for API calls\n   - shadcn for base components\n\n2. Create the following folder structure:\n```\n/src\n├── components/       # Reusable UI components\n├── pages/           # Page components\n├── hooks/           # Custom hooks\n├── store/           # Zustand stores\n├── api/             # API client and utilities\n├── utils/           # Helper functions\n├── types/           # TypeScript type definitions\n└── styles/          # Global styles and Tailwind configuration\n```\n\n3. Implement routing with React Router:\n   - `/login` - Login page\n   - `/profile` - User profile page\n   - `/subscriptions` - Subscription management page\n   - `/admin` - Admin panel for event management\n\n4. Create a layout component with navigation:\n   - Header with logo and navigation links\n   - Navigation links for Subscriptions, Profile, and Admin (if applicable)\n   - User information display\n\n5. Implement route protection:\n   - Redirect unauthenticated users to the login page\n   - Hide admin link for non-admin users\n\nEnsure the application follows the Nova design system specifications from the PRD.",
+        "testStrategy": "Write unit tests for the routing configuration to verify correct route protection and redirection. Test the layout component to ensure proper rendering of navigation elements. Create integration tests that verify the routing flow between different pages. Test responsive behavior to ensure the layout works on different screen sizes.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Frontend Authentication and User Store",
+        "description": "Implement the frontend authentication flow and user state management.",
+        "details": "Create the authentication flow and user state management:\n\n1. Implement a Zustand store for user authentication:\n```typescript\ninterface UserState {\n  user: User | null;\n  isAuthenticated: boolean;\n  isLoading: boolean;\n  error: string | null;\n  login: (username: string) => Promise<void>;\n  logout: () => void;\n  fetchUser: () => Promise<void>;\n}\n```\n\n2. Create API client functions for authentication:\n   - `login(username: string): Promise<User>`\n   - `getCurrentUser(): Promise<User>`\n\n3. Implement the Login page component:\n   - Simple form with username input\n   - Store the authentication token in localStorage\n   - Redirect to the subscriptions page after successful login\n\n4. Create an AuthProvider component that:\n   - Checks for existing authentication on app load\n   - Provides the authentication state to the application\n   - Handles automatic token refresh if needed\n\n5. Implement a useAuth hook for easy access to authentication state and functions.\n\n6. Add a logout function that clears the token and redirects to the login page.\n\nEnsure proper error handling and loading states during authentication operations.",
+        "testStrategy": "Write unit tests for the authentication store to verify login, logout, and user fetching functionality. Test the API client functions with mocked responses. Create integration tests for the login flow, including form validation and redirection. Test token persistence and automatic user fetching on application load. Verify that protected routes correctly redirect unauthenticated users.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "User Profile Page Implementation",
+        "description": "Implement the user profile page for managing Telegram settings and bot activation.",
+        "details": "Create the user profile page with the following features:\n\n1. Implement a Profile component with sections:\n   - User information display (username)\n   - Telegram recipients management\n   - Telegram bot activation\n\n2. Create a form for managing Telegram recipients:\n   - Text field for entering semicolon-separated Telegram usernames\n   - Validation for proper format\n   - Save button that calls the API to update recipients\n\n3. Implement the Telegram bot activation flow:\n   - Button to generate a one-time activation code\n   - Display the code with instructions: \"1. Find our bot in Telegram: @YourNotifierBotName. 2. Send it the message: /start <code>.\"\n   - Visual indication of activation status\n\n4. Create API client functions:\n   - `updateTelegramRecipients(recipients: string): Promise<void>`\n   - `generateActivationCode(): Promise<{ code: string }>`\n\n5. Add proper loading, success, and error states for all operations.\n\nEnsure the page follows the Nova design system specifications from the PRD.",
+        "testStrategy": "Write unit tests for the Profile component to verify form validation and submission. Test the API client functions with mocked responses. Create integration tests for the entire profile management flow, including recipient updates and activation code generation. Test error handling and loading states. Verify that the UI correctly reflects the current user's settings.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Subscription Management Page Implementation",
+        "description": "Implement the subscription management page for viewing and managing event subscriptions.",
+        "details": "Create the subscription management page with the following features:\n\n1. Implement a Subscriptions component that displays a table of available events with columns:\n   - Checkbox for subscription status\n   - System name\n   - Event name\n   - Description\n\n2. Add a search/filter input above the table that filters events in real-time based on text input (matching against system name, event name, or description).\n\n3. Implement subscription toggling:\n   - Clicking a checkbox should immediately update the subscription status\n   - Show loading state during API calls\n   - Handle errors gracefully\n\n4. Create API client functions:\n   - `getEvents(): Promise<Event[]>`\n   - `getUserSubscriptions(): Promise<Subscription[]>`\n   - `subscribeToEvent(eventId: number): Promise<void>`\n   - `unsubscribeFromEvent(eventId: number): Promise<void>`\n\n5. Use React Query for data fetching and caching:\n   - Fetch events and subscriptions on page load\n   - Invalidate queries after subscription changes\n   - Implement optimistic updates for better UX\n\nEnsure the page follows the Nova design system specifications from the PRD.",
+        "testStrategy": "Write unit tests for the Subscriptions component to verify rendering and filtering functionality. Test the subscription toggling logic with mocked API responses. Create integration tests for the entire subscription management flow, including search/filter and subscription updates. Test error handling and loading states. Verify that the UI correctly reflects the current subscription status for each event.",
+        "priority": "high",
+        "dependencies": [
+          6,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Admin Panel Implementation",
+        "description": "Implement the admin panel for managing event definitions in the system.",
+        "details": "Create the admin panel with the following features:\n\n1. Implement an Admin component that displays a table of all events with columns:\n   - System name\n   - Event name\n   - Kafka topic\n   - Description\n   - Actions (Edit, Delete)\n\n2. Add an \"Add Event\" button that opens a modal form for creating new events.\n\n3. Implement the event form component:\n   - Fields for system name, event name, Kafka topic, and description\n   - Validation for required fields\n   - Submit button that calls the API to create/update the event\n\n4. Add edit functionality:\n   - Clicking the Edit button should open the form modal with pre-filled data\n   - Form submission should update the existing event\n\n5. Implement delete functionality:\n   - Clicking the Delete button should show a confirmation dialog\n   - Confirmation should call the API to delete the event\n\n6. Create API client functions:\n   - `createEvent(event: EventInput): Promise<Event>`\n   - `updateEvent(id: number, event: EventInput): Promise<Event>`\n   - `deleteEvent(id: number): Promise<void>`\n\n7. Use React Query for data fetching and cache management.\n\nEnsure the page follows the Nova design system specifications from the PRD.",
+        "testStrategy": "Write unit tests for the Admin component to verify rendering and form validation. Test the event creation, editing, and deletion flows with mocked API responses. Create integration tests for the entire admin panel, including form submission and table updates. Test error handling and loading states. Verify that the UI correctly reflects changes after CRUD operations.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Frontend Component Library Implementation",
+        "description": "Implement reusable UI components based on the Nova design system specifications.",
+        "details": "Create a library of reusable UI components following the Nova design system:\n\n1. Implement basic components:\n   - Button (primary, secondary, tertiary variants with different sizes)\n   - Input field (with label, helper text, error state)\n   - Checkbox\n   - Card container\n   - Modal dialog\n   - Table\n   - Search/filter input\n\n2. Implement the color system using TailwindCSS:\n   - Define custom colors in tailwind.config.js based on the Nova color palette\n   - Create CSS variables for theme colors (light and dark mode)\n\n3. Implement the typography system:\n   - Configure font family, weights, and sizes in tailwind.config.js\n   - Create typography utility classes for headings and body text\n\n4. Implement the spacing system:\n   - Configure spacing scale in tailwind.config.js based on the Nova spacing units\n\n5. Add support for dark mode:\n   - Implement theme switching functionality\n   - Ensure all components work correctly in both light and dark modes\n\nEnsure all components are properly typed with TypeScript and include appropriate props for customization.",
+        "testStrategy": "Write unit tests for each component to verify rendering and behavior with different props. Test accessibility features like keyboard navigation and screen reader support. Create visual regression tests to ensure components match the design specifications. Test theme switching to verify components render correctly in both light and dark modes. Verify component responsiveness on different screen sizes.",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "API Integration and Error Handling",
+        "description": "Implement a robust API client with error handling and request/response interceptors.",
+        "details": "Create a comprehensive API client with proper error handling:\n\n1. Implement a base API client using Axios or fetch:\n```typescript\nconst api = {\n  get: <T>(url: string, config?: RequestConfig): Promise<T> => { /* ... */ },\n  post: <T>(url: string, data?: any, config?: RequestConfig): Promise<T> => { /* ... */ },\n  put: <T>(url: string, data?: any, config?: RequestConfig): Promise<T> => { /* ... */ },\n  delete: <T>(url: string, config?: RequestConfig): Promise<T> => { /* ... */ },\n};\n```\n\n2. Add request interceptors:\n   - Automatically add authentication token to requests\n   - Handle request cancellation for in-flight requests\n\n3. Add response interceptors:\n   - Parse JSON responses\n   - Handle common error status codes (401, 403, 404, 500)\n   - Format error messages for display\n\n4. Implement a global error handling mechanism:\n   - Create an ErrorContext and provider\n   - Display error notifications/toasts for API errors\n   - Handle authentication errors by redirecting to login\n\n5. Create a useApi hook that provides access to the API client and error handling utilities.\n\n6. Implement retry logic for transient errors with exponential backoff.\n\nEnsure proper TypeScript typing for all API functions and responses.",
+        "testStrategy": "Write unit tests for the API client to verify request/response handling and interceptors. Test error handling with mocked error responses of different types. Create integration tests that verify the end-to-end flow of API requests, including authentication and error handling. Test retry logic with simulated network failures. Verify that error messages are properly formatted and displayed to the user.",
+        "priority": "high",
+        "dependencies": [
+          9,
+          10
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Responsive Design Implementation",
+        "description": "Implement responsive design for all pages to ensure proper display on different device sizes.",
+        "details": "Implement responsive design across the application:\n\n1. Define breakpoints according to the Nova design system:\n   - Mobile (sm): up to 767px\n   - Tablet (md): 768px - 1023px\n   - Desktop (lg): 1024px - 1439px\n   - Large Desktop (xl): 1440px+\n\n2. Create responsive layouts for all pages:\n   - Use CSS Grid and Flexbox for flexible layouts\n   - Implement different layouts for mobile and desktop views\n   - Ensure proper spacing and typography at all screen sizes\n\n3. Implement a responsive navigation:\n   - Full horizontal navigation on desktop\n   - Hamburger menu with slide-out drawer on mobile\n\n4. Make tables responsive:\n   - Horizontal scrolling on small screens\n   - Or card-based alternative view on mobile\n\n5. Adjust form elements for touch interfaces:\n   - Larger touch targets on mobile\n   - Full-width inputs on small screens\n\n6. Test and optimize for various devices:\n   - Different screen sizes (phones, tablets, desktops)\n   - Different pixel densities\n   - Touch and non-touch interfaces\n\nEnsure all components follow the responsive behavior specified in the Nova design system.",
+        "testStrategy": "Write tests that verify component rendering at different viewport sizes. Use visual regression testing to compare layouts across breakpoints. Test navigation and interactive elements on touch devices. Verify that all content is accessible and usable on small screens. Test performance on mobile devices to ensure smooth rendering and interactions.",
+        "priority": "medium",
+        "dependencies": [
+          11,
+          12,
+          13,
+          14
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Performance Optimization",
+        "description": "Optimize the application for performance, focusing on load times, rendering efficiency, and resource usage.",
+        "details": "Implement performance optimizations across the application:\n\n1. Frontend optimizations:\n   - Implement code splitting with React.lazy and Suspense\n   - Optimize bundle size with tree shaking and proper imports\n   - Implement memoization for expensive calculations (React.memo, useMemo, useCallback)\n   - Optimize rendering with virtualized lists for large data sets\n   - Implement efficient state management to prevent unnecessary re-renders\n\n2. Backend optimizations:\n   - Implement database query optimization (indexes, query tuning)\n   - Add caching for frequently accessed data (using Spring Cache)\n   - Optimize Kafka consumer configuration for throughput\n   - Implement connection pooling for database and external services\n   - Add request rate limiting to prevent abuse\n\n3. API optimizations:\n   - Implement pagination for list endpoints\n   - Use compression for response payloads\n   - Optimize payload size by selecting only needed fields\n   - Implement ETags for caching\n\n4. Image and asset optimizations:\n   - Compress and optimize images\n   - Use appropriate image formats (WebP where supported)\n   - Implement lazy loading for images\n\nMeasure and document performance improvements using appropriate metrics.",
+        "testStrategy": "Create performance benchmarks to measure load times, rendering performance, and resource usage. Use Lighthouse or similar tools to measure and track web vitals. Implement load testing for the backend to verify throughput and response times under load. Test with large datasets to ensure the application remains responsive. Verify that optimizations don't negatively impact functionality or user experience.",
+        "priority": "medium",
+        "dependencies": [
+          8,
+          15,
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Accessibility Implementation",
+        "description": "Ensure the application meets WCAG 2.1 Level AA accessibility standards.",
+        "details": "Implement accessibility features across the application:\n\n1. Semantic HTML:\n   - Use proper heading hierarchy (h1-h6)\n   - Use semantic elements (nav, main, section, article, etc.)\n   - Implement proper form labeling\n\n2. Keyboard navigation:\n   - Ensure all interactive elements are keyboard accessible\n   - Implement logical tab order\n   - Add keyboard shortcuts for common actions\n   - Ensure visible focus indicators\n\n3. Screen reader support:\n   - Add aria-* attributes where appropriate\n   - Implement proper alt text for images\n   - Use aria-live regions for dynamic content\n   - Test with screen readers (NVDA, VoiceOver)\n\n4. Color and contrast:\n   - Ensure all text meets WCAG AA contrast requirements (4.5:1 for normal text, 3:1 for large text)\n   - Don't rely solely on color to convey information\n   - Test with color blindness simulators\n\n5. Motion and animation:\n   - Respect prefers-reduced-motion setting\n   - Avoid content that flashes or flickers\n\n6. Form accessibility:\n   - Clear error messages\n   - Accessible form validation\n   - Proper input types for different data\n\nUse automated tools (axe, Lighthouse) to identify and fix common accessibility issues.",
+        "testStrategy": "Run automated accessibility audits using tools like axe-core or Lighthouse. Perform manual testing with keyboard navigation to verify all functionality is accessible without a mouse. Test with screen readers to ensure content is properly announced. Verify color contrast meets WCAG requirements in both light and dark themes. Create a checklist of accessibility requirements and verify each component against it.",
+        "priority": "medium",
+        "dependencies": [
+          14,
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Error Handling and Logging",
+        "description": "Implement comprehensive error handling and logging throughout the application.",
+        "details": "Implement error handling and logging across the application:\n\n1. Frontend error handling:\n   - Implement a global error boundary to catch and display React rendering errors\n   - Add try/catch blocks around async operations\n   - Display user-friendly error messages\n   - Implement automatic error reporting to the backend\n\n2. Backend error handling:\n   - Create a global exception handler using @ControllerAdvice\n   - Implement custom exception classes for different error types\n   - Return appropriate HTTP status codes and error messages\n   - Sanitize error details in production to avoid leaking sensitive information\n\n3. Logging implementation:\n   - Configure structured logging with SLF4J and Logback\n   - Log different levels (INFO, WARN, ERROR) appropriately\n   - Include contextual information in logs (user ID, request ID, etc.)\n   - Configure log rotation and retention\n\n4. Monitoring integration:\n   - Add health check endpoints\n   - Implement basic metrics collection (request counts, error rates, etc.)\n   - Configure alerting for critical errors\n\n5. Implement graceful degradation:\n   - Handle external service failures (Kafka, Telegram)\n   - Implement circuit breakers for external dependencies\n   - Provide fallback behavior where possible\n\nEnsure all errors are properly logged and that critical errors trigger alerts.",
+        "testStrategy": "Write unit tests that verify error handling in different scenarios. Create integration tests that simulate various failure modes (database errors, external service failures, etc.). Verify that error messages are user-friendly and don't expose sensitive information. Test logging to ensure all important events are properly logged with the correct level and context. Verify that health checks accurately reflect the application state.",
+        "priority": "high",
+        "dependencies": [
+          8,
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Testing and Quality Assurance",
+        "description": "Implement comprehensive testing across the application to ensure quality and reliability.",
+        "details": "Implement a comprehensive testing strategy:\n\n1. Unit testing:\n   - Frontend: Test individual components, hooks, and utilities using Jest and React Testing Library\n   - Backend: Test service methods, controllers, and utilities using JUnit and Mockito\n   - Aim for high test coverage of business logic\n\n2. Integration testing:\n   - Frontend: Test component interactions and page flows\n   - Backend: Test API endpoints with MockMvc\n   - Test database interactions with TestContainers\n\n3. End-to-end testing:\n   - Implement E2E tests using Cypress or Playwright\n   - Test critical user flows (login, subscription management, etc.)\n   - Test with realistic data scenarios\n\n4. Performance testing:\n   - Load testing with JMeter or k6\n   - Test Kafka consumer performance with high message volumes\n   - Measure and optimize API response times\n\n5. Security testing:\n   - Implement basic security scanning (OWASP dependency check)\n   - Test for common vulnerabilities (XSS, CSRF, etc.)\n   - Verify proper authentication and authorization\n\n6. Accessibility testing:\n   - Automated testing with axe-core\n   - Manual testing with screen readers and keyboard navigation\n\n7. Setup CI/CD pipeline:\n   - Run tests on every pull request\n   - Enforce code quality standards\n   - Generate test reports\n\nDocument testing approach and coverage in the project README.",
+        "testStrategy": "Meta-testing: Review test quality by measuring code coverage and analyzing test effectiveness. Perform manual verification of critical functionality alongside automated tests. Conduct regular test reviews to identify gaps in test coverage. Verify that all acceptance criteria from the PRD are covered by tests.",
+        "priority": "high",
+        "dependencies": [
+          17,
+          18,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Documentation",
+        "description": "Create comprehensive documentation for the application, including setup instructions, API documentation, and user guides.",
+        "details": "Create the following documentation:\n\n1. Project README:\n   - Project overview and purpose\n   - Technology stack\n   - Setup instructions\n   - Development workflow\n   - Testing approach\n   - Deployment instructions\n\n2. API documentation:\n   - Use Springdoc OpenAPI to generate Swagger documentation\n   - Document all endpoints, request/response formats, and error codes\n   - Include authentication requirements\n   - Provide example requests and responses\n\n3. User documentation:\n   - Create a user guide for the application\n   - Include screenshots and step-by-step instructions\n   - Document all features and how to use them\n   - Include troubleshooting section\n\n4. Developer documentation:\n   - Document architecture and design decisions\n   - Create component documentation\n   - Document state management approach\n   - Include database schema and entity relationships\n   - Document Kafka topic structure and message formats\n\n5. Deployment documentation:\n   - Document production deployment process\n   - Include environment configuration\n   - Document scaling considerations\n   - Include monitoring and maintenance instructions\n\nEnsure all documentation is clear, concise, and up-to-date with the implemented features.",
+        "testStrategy": "Review documentation for accuracy and completeness. Verify that setup instructions work on a clean environment. Test API examples to ensure they match the actual implementation. Have team members review documentation for clarity and usefulness. Verify that all features mentioned in the PRD are documented.",
+        "priority": "medium",
+        "dependencies": [
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Deployment Configuration",
+        "description": "Create deployment configuration for production environments.",
+        "details": "Implement deployment configuration for production:\n\n1. Docker production configuration:\n   - Create production Dockerfile for frontend (multi-stage build with Nginx)\n   - Create production Dockerfile for backend (optimized JVM settings)\n   - Create production docker-compose.yml with appropriate volumes and networks\n\n2. Environment configuration:\n   - Implement environment variable configuration for all services\n   - Create example .env files with documentation\n   - Implement secrets management (not storing secrets in code)\n\n3. Database migration:\n   - Implement Flyway or Liquibase for database schema migrations\n   - Create initial schema migration script\n   - Document migration process\n\n4. Scaling configuration:\n   - Configure Kafka consumer group for horizontal scaling\n   - Implement stateless design for backend services\n   - Configure connection pooling for database\n\n5. Monitoring and logging:\n   - Configure centralized logging (ELK stack or similar)\n   - Implement health check endpoints\n   - Configure basic metrics collection\n\n6. Security configuration:\n   - Configure HTTPS with proper certificates\n   - Implement secure headers\n   - Configure CORS properly\n   - Implement rate limiting\n\nEnsure all configuration is documented and tested in a staging environment before production deployment.",
+        "testStrategy": "Create a staging environment that mirrors production. Test deployment process to verify all components start correctly. Verify that environment variables and secrets are properly handled. Test horizontal scaling by deploying multiple instances. Verify that database migrations run correctly. Test monitoring and logging to ensure they capture necessary information. Verify security configuration with automated scanning tools.",
+        "priority": "medium",
+        "dependencies": [
+          20
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Kafka Test Utilities",
+        "description": "Create utilities for testing Kafka integration locally.",
+        "details": "Implement Kafka testing utilities:\n\n1. Create a script for setting up test topics:\n   - Implement a shell script or Java application that creates test topics\n   - Configure appropriate partitions and replication factor\n   - Document usage instructions\n\n2. Implement a message producer utility:\n   - Create a simple web UI or CLI tool for sending test messages to Kafka topics\n   - Allow specifying the topic and message content (JSON)\n   - Provide sample message templates for common events\n\n3. Create a message consumer utility:\n   - Implement a simple consumer that displays messages from topics\n   - Allow filtering by topic and content\n   - Display messages in a readable format\n\n4. Add documentation:\n   - Document how to use the utilities for testing\n   - Include example commands and expected results\n   - Add troubleshooting section\n\n5. Integrate with docker-compose:\n   - Ensure utilities are available in the development environment\n   - Configure appropriate networking\n   - Add documentation to README\n\nEnsure all utilities are easy to use and well-documented.",
+        "testStrategy": "Test each utility with various message types and formats. Verify that messages sent with the producer utility are correctly received by the application. Test edge cases like malformed JSON, very large messages, and high message volumes. Have team members test the utilities to verify usability and documentation clarity.",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Security Implementation",
+        "description": "Implement security measures to protect the application and user data.",
+        "details": "Implement security measures across the application:\n\n1. Authentication security:\n   - Implement proper token-based authentication\n   - Configure secure cookie settings (HttpOnly, SameSite, Secure)\n   - Implement token expiration and refresh\n   - Add rate limiting for authentication endpoints\n\n2. Authorization:\n   - Implement role-based access control for admin features\n   - Verify user permissions for all operations\n   - Implement proper object-level security (users can only access their own data)\n\n3. Data protection:\n   - Implement input validation for all user inputs\n   - Use parameterized queries to prevent SQL injection\n   - Implement XSS protection\n   - Configure proper Content Security Policy\n\n4. API security:\n   - Implement CSRF protection\n   - Configure secure headers (X-Content-Type-Options, X-Frame-Options, etc.)\n   - Implement rate limiting for API endpoints\n   - Validate request payloads against schemas\n\n5. Dependency security:\n   - Regularly update dependencies\n   - Use OWASP Dependency Check to identify vulnerabilities\n   - Configure Dependabot or similar tool for automated updates\n\n6. Secure configuration:\n   - Don't store secrets in code or environment variables\n   - Use a secure secrets management solution\n   - Configure proper file permissions\n   - Disable debug features in production\n\nDocument all security measures and conduct a security review before deployment.",
+        "testStrategy": "Perform security testing with tools like OWASP ZAP. Test authentication and authorization by attempting to access resources without proper permissions. Verify that all user inputs are properly validated and sanitized. Test API endpoints for common vulnerabilities like CSRF and injection attacks. Verify that sensitive data is properly protected in transit and at rest. Conduct a security review with the team to identify potential vulnerabilities.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          15,
+          19
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Final Integration and System Testing",
+        "description": "Perform final integration testing of all components and end-to-end system testing.",
+        "details": "Conduct comprehensive integration and system testing:\n\n1. End-to-end flow testing:\n   - Test the complete flow from event creation to notification delivery\n   - Verify all user stories from the PRD are implemented correctly\n   - Test with realistic data and scenarios\n\n2. Integration testing:\n   - Test integration between frontend and backend\n   - Test Kafka integration with message production and consumption\n   - Test Telegram bot integration\n   - Verify database interactions\n\n3. Performance validation:\n   - Verify that notification latency meets the requirement (< 2 seconds)\n   - Test with high message volumes to verify scalability\n   - Measure and optimize API response times\n\n4. Usability testing:\n   - Conduct user testing with representative users\n   - Gather feedback on usability and user experience\n   - Make adjustments based on feedback\n\n5. Regression testing:\n   - Verify that all features continue to work after final changes\n   - Run automated test suite\n   - Perform manual testing of critical paths\n\n6. Documentation review:\n   - Verify that all documentation is up-to-date\n   - Ensure README contains accurate setup instructions\n   - Verify API documentation matches implementation\n\nAddress any issues found during testing before final release.",
+        "testStrategy": "Create a comprehensive test plan that covers all aspects of the application. Use a combination of automated and manual testing to verify functionality. Document all test cases and results. Involve multiple team members in testing to get different perspectives. Verify that all requirements from the PRD are met and all acceptance criteria are satisfied.",
+        "priority": "high",
+        "dependencies": [
+          20,
+          21,
+          22,
+          23,
+          24
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-29T11:58:40.839Z",
+      "updated": "2025-06-29T11:58:40.839Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
