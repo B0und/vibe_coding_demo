@@ -39,6 +39,9 @@ public class SecurityConfig {
                 // Allow public access to registration endpoint
                 .requestMatchers("/api/users/register").permitAll()
                 
+                // Allow public access to Telegram bot activation endpoint
+                .requestMatchers("/api/users/telegram-activate").permitAll()
+                
                 // Allow public access to health check endpoints (common in Spring Boot)
                 .requestMatchers("/actuator/health").permitAll()
                 

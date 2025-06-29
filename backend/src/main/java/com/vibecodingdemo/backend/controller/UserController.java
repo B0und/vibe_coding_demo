@@ -98,6 +98,94 @@ public class UserController {
         }
     }
 
+    @PutMapping("/profile/telegram-recipients")
+    public ResponseEntity<?> updateTelegramRecipients(@RequestBody UpdateTelegramRecipientsRequest request) {
+        try {
+            // Get the currently authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Not authenticated"));
+            }
+
+            String username = authentication.getName();
+            
+            // Validate request
+            if (request.getRecipients() == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Recipients field is required"));
+            }
+
+            // Update Telegram recipients
+            userService.updateTelegramRecipients(username, request.getRecipients());
+
+            return ResponseEntity.ok(Map.of("message", "Telegram recipients updated successfully"));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Failed to update Telegram recipients"));
+        }
+    }
+
+    @PostMapping("/profile/telegram-activation-code")
+    public ResponseEntity<?> generateTelegramActivationCode() {
+        try {
+            // Get the currently authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Not authenticated"));
+            }
+
+            String username = authentication.getName();
+            
+            // Generate activation code
+            String activationCode = userService.generateTelegramActivationCode(username);
+
+            return ResponseEntity.ok(Map.of("activationCode", activationCode));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Failed to generate activation code"));
+        }
+    }
+
+    @PostMapping("/telegram-activate")
+    public ResponseEntity<?> activateTelegramBot(@RequestBody ActivateTelegramBotRequest request) {
+        try {
+            // Validate request
+            if (request.getCode() == null || request.getCode().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Activation code is required"));
+            }
+            
+            if (request.getChatId() == null || request.getChatId().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Chat ID is required"));
+            }
+
+            // Activate Telegram bot
+            userService.activateTelegramBot(request.getCode().trim(), request.getChatId().trim());
+
+            return ResponseEntity.ok(Map.of("message", "Telegram bot activated successfully"));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(Map.of("error", "Failed to activate Telegram bot"));
+        }
+    }
+
     // DTO class for registration request
     public static class RegisterUserRequest {
         private String username;
@@ -114,6 +202,54 @@ public class UserController {
 
         public void setUsername(String username) {
             this.username = username;
+        }
+    }
+
+    // DTO class for updating Telegram recipients
+    public static class UpdateTelegramRecipientsRequest {
+        private String recipients;
+
+        public UpdateTelegramRecipientsRequest() {}
+
+        public UpdateTelegramRecipientsRequest(String recipients) {
+            this.recipients = recipients;
+        }
+
+        public String getRecipients() {
+            return recipients;
+        }
+
+        public void setRecipients(String recipients) {
+            this.recipients = recipients;
+        }
+    }
+
+    // DTO class for Telegram bot activation
+    public static class ActivateTelegramBotRequest {
+        private String code;
+        private String chatId;
+
+        public ActivateTelegramBotRequest() {}
+
+        public ActivateTelegramBotRequest(String code, String chatId) {
+            this.code = code;
+            this.chatId = chatId;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getChatId() {
+            return chatId;
+        }
+
+        public void setChatId(String chatId) {
+            this.chatId = chatId;
         }
     }
 } 

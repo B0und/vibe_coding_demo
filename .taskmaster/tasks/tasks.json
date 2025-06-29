@@ -211,7 +211,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -219,7 +219,7 @@
             "description": "Create the required PUT and POST endpoints in `UserController` for managing Telegram settings and secure them to ensure users can only modify their own data.",
             "dependencies": [],
             "details": "Define method stubs in `UserController` for: `PUT /api/users/profile/telegram-recipients`, `POST /api/users/profile/telegram-activation-code`, and `POST /api/users/telegram-activate`. Apply Spring Security to the first two endpoints to verify that the authenticated principal's username matches the user being modified. The `/telegram-activate` endpoint will be publicly accessible but its logic will rely on the secret code for validation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write integration tests to verify that authenticated users can access their own profile endpoints but receive a 403 Forbidden error when attempting to access another user's profile. Test that unauthenticated requests are rejected with a 401 Unauthorized."
           },
           {
@@ -228,7 +228,7 @@
             "description": "Set up and configure a Caffeine-based in-memory cache to store temporary Telegram activation codes with a fixed expiration time.",
             "dependencies": [],
             "details": "Add the `spring-boot-starter-cache` and `caffeine` dependencies to the project. Create a `@Configuration` class to configure the `CacheManager`. Define a cache named 'activationCodes' with a time-to-live (TTL) of 10 minutes. Enable caching application-wide with `@EnableCaching`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write a configuration test to ensure a `Cache` bean named 'activationCodes' is created and can be injected. Manually test by adding an item and verifying it expires after the configured duration."
           },
           {
@@ -239,7 +239,7 @@
               1
             ],
             "details": "Add a `telegramRecipients` (String) field to the `User` entity. Implement the `UserService.updateTelegramRecipients(username, recipients)` method to find the user, update the field, and persist the changes. Wire this service method to the `PUT /api/users/profile/telegram-recipients` endpoint.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write a unit test for the `UserService` method to ensure it correctly updates the user entity. Write an integration test for the endpoint, sending a valid JWT and a new recipient list, then verifying the database state."
           },
           {
@@ -251,7 +251,7 @@
               2
             ],
             "details": "Implement the `UserService.generateTelegramActivationCode(username)` method. The logic should generate a secure random 6-digit code. Use the configured 'activationCodes' cache to store the code, with the username as the key. Connect this service method to the `POST /api/users/profile/telegram-activation-code` endpoint, which should return the generated code in the response body.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write a unit test for the service method to verify that a code is generated and `Cache.put` is called with the correct key (username) and value (code). Write an integration test for the endpoint to ensure it returns a valid code and that the code is present in the cache."
           },
           {
@@ -262,7 +262,7 @@
               4
             ],
             "details": "Add a `telegramChatId` (String) field to the `User` entity. Implement the `UserService.activateTelegramBot(code, chatId)` method. The logic should look up the username from the 'activationCodes' cache using the provided code. If found, update the corresponding user's `telegramChatId` and save the user. Invalidate the code from the cache upon successful activation. Implement the public `POST /api/users/telegram-activate` endpoint to call this service method. Handle errors for invalid or expired codes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the service method covering success (code found, user updated, cache evicted), failure (code not found), and expired code scenarios. Write an integration test for the endpoint by first generating a code, then calling the activation endpoint with that code and a chat ID, and finally verifying the user's `telegramChatId` is updated in the database."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T16:38:28.807Z",
+      "updated": "2025-06-29T16:45:31.016Z",
       "description": "Tasks for master context"
     }
   }
