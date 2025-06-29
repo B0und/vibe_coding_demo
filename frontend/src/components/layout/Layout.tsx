@@ -1,80 +1,70 @@
-import { Outlet, Link, useNavigate } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useAuth } from "../../store/authStore";
+import { ThemeToggle } from "../ui";
 
-export default function Layout() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+  const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  if (!isAuthenticated) {
-    return <Outlet />;
-  }
+  const navigation = [
+    { name: "Subscriptions", href: "/subscriptions" },
+    { name: "Profile", href: "/profile" },
+    ...(user?.role === "admin" ? [{ name: "Admin", href: "/admin" }] : []),
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-secondary-50">
+      <nav className="bg-white shadow-sm border-b border-secondary-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            {/* Logo */}
+          <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link
                 to="/subscriptions"
-                className="text-2xl font-bold text-indigo-600"
+                className="text-heading-4 text-primary-600 font-bold"
               >
-                VibeEvents
+                Vibe Events
               </Link>
             </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              <Link
-                to="/subscriptions"
-                className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Subscriptions
-              </Link>
-              <Link
-                to="/profile"
-                className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Profile
-              </Link>
-              {user?.role === "admin" && (
-                <Link
-                  to="/admin"
-                  className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Admin
-                </Link>
-              )}
-            </nav>
-
-            {/* User Menu */}
             <div className="flex items-center space-x-4">
-              <div className="text-sm">
-                <span className="text-gray-700">Welcome, </span>
-                <span className="font-medium text-gray-900">{user?.name}</span>
+              {/* Navigation Links */}
+              <div className="hidden md:flex items-center space-x-4">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === item.href
+                        ? "bg-primary-50 text-primary-700"
+                        : "text-secondary-600 hover:text-secondary-900 hover:bg-secondary-50"
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
               </div>
-              <button
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
+
+              {/* Theme Toggle */}
+              <ThemeToggle size="sm" />
+
+              {/* User Menu */}
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-secondary-600">
+                  {user?.role === "admin" ? "Admin" : "User"}
+                </span>
+                <button
+                  onClick={logout}
+                  className="text-sm text-secondary-600 hover:text-secondary-900 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Main Content */}
-      <main className="py-6">
-        <Outlet />
-      </main>
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

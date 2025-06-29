@@ -895,7 +895,7 @@
         "dependencies": [
           9
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -903,7 +903,7 @@
             "description": "Initialize the component library project and configure TailwindCSS with the core design tokens from the Nova design system, including colors, typography, and spacing.",
             "dependencies": [],
             "details": "Create the initial project structure. In `tailwind.config.js`, define the custom color palette based on Nova specifications, creating CSS variables for light and dark themes. Configure the typography system with specified font families, weights, and sizes. Set up the spacing scale to match Nova's spacing units.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify the `tailwind.config.js` is correctly processed by building the CSS. Create a sample HTML page to visually inspect that the custom utility classes for colors, fonts, and spacing are applied correctly and match the design system."
           },
           {
@@ -914,7 +914,7 @@
               1
             ],
             "details": "Button: Implement primary, secondary, and tertiary variants, each with small, medium, and large size options. Input Field: Must include a label, optional helper text, and a distinct error state. Checkbox: Implement a standard checkbox with checked/unchecked states. All component props must be defined using TypeScript interfaces.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Storybook to create stories for each component, covering all variants, sizes, and states (e.g., disabled, error). Write unit tests to verify prop handling and default values. Perform visual regression testing against the design specs."
           },
           {
@@ -925,7 +925,7 @@
               2
             ],
             "details": "Card: Create a flexible container component with slots for a header, body, and footer content. Modal: Implement a dialog that overlays the main UI. It should be controllable via props (e.g., `isOpen`) and include slots for a title, content, and action buttons (which will use the Button component from subtask 2).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Develop Storybook stories that demonstrate the Card and Modal with various types of nested content. Write unit tests to check the logic for opening/closing the modal and for prop validation. Test responsiveness of the modal on different screen sizes."
           },
           {
@@ -936,7 +936,7 @@
               2
             ],
             "details": "Table: Implement a responsive table component that accepts data (e.g., an array of objects) and column definitions as props to render a header and rows. Search/Filter Input: Create a specialized input component, potentially extending the base Input, with features like a search icon and a clear button.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Storybook with mock data to test the rendering of the Table with different data sets (e.g., empty, large). Write unit tests for the data mapping and rendering logic. For the Search Input, test its state management and event emissions."
           },
           {
@@ -949,7 +949,7 @@
               4
             ],
             "details": "Implement a theme context and provider to manage the current theme (light/dark). Create a hook (e.g., `useTheme`) to access and toggle the theme. Update all components (Button, Input, Card, Modal, Table, etc.) using Tailwind's `dark:` variant modifier to ensure they adapt correctly to the selected theme based on the CSS variables defined in subtask 1.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Add a global theme toggle to Storybook to test all components in both light and dark modes. Perform a full visual review of every component variant to ensure color contrast and style correctness in both themes. Add visual regression tests for both modes."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T17:11:34.863Z",
+      "updated": "2025-06-29T17:27:14.966Z",
       "description": "Tasks for master context"
     }
   }
