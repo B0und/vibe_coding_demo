@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 # Set working directory
 WORKDIR /app
@@ -15,11 +15,15 @@ RUN chmod +x gradlew
 # Copy source code
 COPY src src
 
+# Copy startup script
+COPY start.sh .
+RUN chmod +x start.sh
+
 # Build the application
 RUN ./gradlew build -x test
 
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "build/libs/backend-0.0.1-SNAPSHOT.jar"] 
+# Run the application using startup script
+CMD ["./start.sh"] 

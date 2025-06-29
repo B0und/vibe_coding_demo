@@ -21,6 +21,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/vibecodingdemo
@@ -30,8 +32,6 @@ services:
     depends_on:
       - postgres
       - kafka
-    volumes:
-      - ./backend:/app
 
   # PostgreSQL Database
   postgres:
