@@ -10,13 +10,24 @@ export default function ProtectedRoute({
   children,
   requireAdmin = false,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (requireAdmin && user?.role !== "admin") {
+  // For now, since we don't have role-based auth in the backend,
+  // we'll disable admin-only routes
+  if (requireAdmin) {
     return <Navigate to="/subscriptions" replace />;
   }
 

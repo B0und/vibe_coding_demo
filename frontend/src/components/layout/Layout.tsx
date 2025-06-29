@@ -1,15 +1,15 @@
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, Outlet } from "react-router";
 import { useAuth } from "../../store/authStore";
 import { ThemeToggle } from "../ui";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
 
   const navigation = [
     { name: "Subscriptions", href: "/subscriptions" },
     { name: "Profile", href: "/profile" },
-    ...(user?.role === "admin" ? [{ name: "Admin", href: "/admin" }] : []),
+    // Admin route removed since we don't have role-based auth yet
   ];
 
   return (
@@ -50,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               {/* User Menu */}
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-secondary-600">
-                  {user?.role === "admin" ? "Admin" : "User"}
+                  {user?.username || "User"}
                 </span>
                 <button
                   onClick={logout}
@@ -64,7 +64,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        <Outlet />
+      </main>
     </div>
   );
 }

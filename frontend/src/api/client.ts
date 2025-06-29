@@ -67,4 +67,57 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL); 
+export const apiClient = new ApiClient(API_BASE_URL);
+
+// Authentication API functions
+export interface LoginResponse {
+  user: {
+    id: string;
+    username: string;
+    createdAt: string;
+  };
+  token: string;
+}
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const authApi = {
+  async login(username: string): Promise<LoginResponse> {
+    try {
+      const response = await apiClient.post<LoginResponse>('/users/register', {
+        username: username.trim()
+      });
+      
+      // Store the token in localStorage
+      if (response.token) {
+        localStorage.setItem('authToken', response.token);
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw new Error('Login failed. Please try again.');
+    }
+  },
+
+  async getCurrentUser(): Promise<AuthUser> {
+    try {
+      const user = await apiClient.get<AuthUser>('/users/me');
+      return user;
+    } catch (error) {
+      console.error('Failed to fetch current user:', error);
+      // Clear invalid token
+      localStorage.removeItem('authToken');
+      throw new Error('Failed to fetch user information.');
+    }
+  },
+
+  logout(): void {
+    localStorage.removeItem('authToken');
+  }
+}; 

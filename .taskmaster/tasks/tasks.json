@@ -619,7 +619,7 @@
           3,
           9
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -627,7 +627,7 @@
             "description": "Implement the API client functions responsible for communicating with the backend authentication endpoints.",
             "dependencies": [],
             "details": "Create a dedicated module for the API client. Implement and export two asynchronous functions: `login(username: string): Promise<User>` which sends a POST request with the username to the login endpoint, and `getCurrentUser(): Promise<User>` which sends a GET request to an endpoint to fetch the currently authenticated user's data, likely using a token from localStorage. Ensure robust error handling for network issues and non-2xx responses.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use a mocking library like MSW or Vitest mocks to simulate the backend API. Write unit tests for both `login` and `getCurrentUser` functions. Test for successful responses, ensuring the correct data is returned. Also, test for various error scenarios, such as 401 (Unauthorized), 404 (Not Found), and 500 (Server Error), verifying that the functions throw appropriate errors."
           },
           {
@@ -638,7 +638,7 @@
               1
             ],
             "details": "Create a new file for the Zustand store. Define the `UserState` interface as specified in the parent task. Implement the store creator, including initial state for `user`, `isAuthenticated`, `isLoading`, and `error`. Implement the `login`, `logout`, and `fetchUser` async actions. The `login` action will call the `login` API client function, store the received token in localStorage, and update the state. `fetchUser` will call `getCurrentUser`. `logout` will clear the token from localStorage and reset the store to its initial state. All async actions must manage `isLoading` and `error` states.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the Zustand store's actions. Mock the API client functions created in subtask 1. For each action (`login`, `logout`, `fetchUser`), test the sequence of state changes. For example, for `login`, verify that `isLoading` becomes true, then on success, `isAuthenticated` becomes true, `user` is populated, and `isLoading` becomes false. Test the failure case where `error` is populated and `isLoading` is reset."
           },
           {
@@ -649,7 +649,7 @@
               2
             ],
             "details": "Build a React component for the login page. It should contain a controlled form with a username input and a submit button. On form submission, it should call the `login` action from the Zustand store. The component must use the `isLoading` and `error` states from the store to provide user feedback, such as disabling the button during the request or displaying an error message on failure. Upon successful login (detected by a change in `isAuthenticated` state), it should redirect the user to the subscriptions page using a routing library.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use React Testing Library to test the Login page component. Mock the Zustand store hook. Test that the component renders correctly. Simulate user typing into the input and clicking the submit button. Verify that the `login` action from the mocked store is called with the correct username. Test that loading indicators and error messages are displayed correctly based on the mocked store's state."
           },
           {
@@ -660,7 +660,7 @@
               2
             ],
             "details": "Create an `AuthProvider` component that wraps the main application layout. In a `useEffect` with an empty dependency array, it should check for a token in localStorage. If a token exists, it should call the `fetchUser` action from the Zustand store. This component ensures session persistence across page reloads. Also, create a custom hook `useAuth` which will be a simple wrapper around the Zustand store hook (`const useAuth = useUserStore;`) to provide a clean, semantic API for other components to access auth state and actions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Using React Testing Library, test the `AuthProvider` component. In one test, simulate no token in localStorage and assert that `fetchUser` is not called. In another test, mock localStorage to contain a token and assert that the `fetchUser` action (from a mocked store) is called on mount. For the `useAuth` hook, a simple unit test can confirm it returns the expected state and functions from the mocked store."
           },
           {
@@ -672,7 +672,7 @@
               4
             ],
             "details": "Create a `ProtectedRoute` component that uses the `useAuth` hook to check the `isAuthenticated` state. If the user is not authenticated, it should redirect them to the login page. Wrap the subscriptions page and any other private routes with this `ProtectedRoute` component. Add a 'Logout' button to a shared component like a navbar. The button's `onClick` handler should call the `logout` function obtained from the `useAuth` hook. The reactive nature of the store and protected routes will handle the redirect to the login page automatically.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test the `ProtectedRoute` component. Render it with a mocked `useAuth` hook returning `isAuthenticated: false` and verify it redirects. Then render it with `isAuthenticated: true` and verify it renders its children. For the logout feature, write a component test for the navbar/component containing the logout button. Simulate a click and assert that the `logout` function from the mocked `useAuth` hook is called."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T17:27:14.966Z",
+      "updated": "2025-06-29T17:35:10.383Z",
       "description": "Tasks for master context"
     }
   }

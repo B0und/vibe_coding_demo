@@ -1,20 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../store/authStore";
-import { Button, Input, Checkbox } from "../components/ui";
+import { Button, Input } from "../components/ui";
 
 export default function LoginPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const { login, isLoading, error, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/subscriptions");
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in real app, this would make an API call
-    login(isAdmin ? "admin" : "user");
-    navigate("/subscriptions");
+
+    if (!username.trim()) {
+      return;
+    }
+
+    try {
+      await login(username.trim());
+      // Navigation will happen automatically via useEffect when isAuthenticated changes
+    } catch (error) {
+      // Error is already handled by the store and displayed via error state
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -25,40 +39,37 @@ export default function LoginPage() {
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-body-small text-secondary-600">
-            Demo app - use any email/password
+            Enter your username to sign in or create an account
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <Input
-              label="Email address"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
+              label="Username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
               required
               fullWidth
-            />
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              fullWidth
+              disabled={isLoading}
             />
           </div>
 
-          <Checkbox
-            checked={isAdmin}
-            onChange={(e) => setIsAdmin(e.target.checked)}
-            label="Login as Admin"
-            description="Check this to access admin features"
-          />
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
 
-          <Button type="submit" variant="primary" size="lg" fullWidth>
-            Sign in
+          <Button
+            type="submit"
+            variant="primary"
+            size="lg"
+            fullWidth
+            disabled={isLoading || !username.trim()}
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>

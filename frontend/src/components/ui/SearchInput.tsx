@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { classNames } from "../../utils/helpers";
-import Input, { InputProps } from "./Input";
+import Input from "./Input";
+import type { InputProps } from "./Input";
 
 export interface SearchInputProps
   extends Omit<InputProps, "leftIcon" | "rightIcon" | "type"> {

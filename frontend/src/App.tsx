@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import AuthProvider from "./components/AuthProvider";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
@@ -8,37 +9,39 @@ import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public route */}
-        <Route path="/login" element={<LoginPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public route */}
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Protected routes with layout */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/subscriptions" replace />} />
-          <Route path="subscriptions" element={<SubscriptionsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          {/* Protected routes with layout */}
           <Route
-            path="admin"
+            path="/"
             element={
-              <ProtectedRoute requireAdmin>
-                <AdminPage />
+              <ProtectedRoute>
+                <Layout />
               </ProtectedRoute>
             }
-          />
-        </Route>
+          >
+            <Route index element={<Navigate to="/subscriptions" replace />} />
+            <Route path="subscriptions" element={<SubscriptionsPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route
+              path="admin"
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
 
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/subscriptions" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/subscriptions" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
