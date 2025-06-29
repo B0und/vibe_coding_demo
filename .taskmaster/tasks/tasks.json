@@ -9,7 +9,7 @@
         "testStrategy": "Verify that all services start correctly with 'docker-compose up' command. Ensure the frontend development server is accessible, the backend server starts without errors, and the database and Kafka services are properly initialized. Test connectivity between services to ensure they can communicate with each other.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -17,7 +17,7 @@
             "description": "Create a new Git repository and establish the top-level directory structure and placeholder files as specified.",
             "dependencies": [],
             "details": "Initialize a new Git repository. Create the root directories `frontend/` and `backend/`. Create empty placeholder files for `docker-compose.yml` and `README.md` at the project root.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that `git status` works in the root directory. Confirm the existence of the `frontend/` and `backend/` directories, and the `docker-compose.yml` and `README.md` files."
           },
           {
@@ -28,7 +28,7 @@
               1
             ],
             "details": "Navigate to the `frontend/` directory. Initialize a new React project using Vite with the TypeScript template. Install and configure TailwindCSS. Install the following libraries: `react-router-dom` (React Router), `zustand` (Zustand), `@tanstack/react-query` (Tanstack Query), and initialize `shadcn/ui` components.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `npm install` and `npm run dev` inside the `frontend` directory. The default application should launch and be accessible in a web browser without any compilation or runtime errors."
           },
           {
@@ -39,7 +39,7 @@
               1
             ],
             "details": "Navigate to the `backend/` directory. Use Spring Initializr (start.spring.io) to generate a new Spring Boot 3.x project with Java 17 and Maven. Include the following dependencies: Spring Web, Spring Data JPA, PostgreSQL Driver, and Spring for Apache Kafka.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Import the project into an IDE or run `./mvnw spring-boot:run` from the command line inside the `backend` directory. The application should start successfully on the embedded server (e.g., Tomcat) without errors."
           },
           {
@@ -51,7 +51,7 @@
               3
             ],
             "details": "Edit the `docker-compose.yml` file. Define services for: \n1. `frontend`: Uses a `Dockerfile` in the `frontend` directory to serve the React app in development mode. \n2. `backend`: Uses a `Dockerfile` in the `backend` directory to build and run the Spring Boot application. \n3. `postgres`: Uses the official `postgres` image, configures environment variables for user/password/db, and mounts a volume for data persistence. \n4. `zookeeper`: Uses a standard Zookeeper image. \n5. `kafka`: Uses a standard Kafka image, linked to the Zookeeper service.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `docker-compose up --build` from the project root. Verify that all five containers start successfully and remain running. Check logs using `docker-compose logs` to ensure there are no connection errors between services."
           },
           {
@@ -62,7 +62,7 @@
               4
             ],
             "details": "Update the `README.md` file. Add a project title and brief description. List the key technologies used for both frontend and backend. Provide clear, step-by-step instructions on how to clone the repository and run the entire application stack using the single `docker-compose up` command. Mention any required prerequisites like Git and Docker.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Ask a team member to perform a fresh checkout of the repository and follow only the instructions in the README.md. They should be able to get the entire project running locally without needing any additional guidance."
           }
         ]
@@ -559,7 +559,7 @@
             "description": "Set up a new React project using Vite with TypeScript and TailwindCSS. Install all required dependencies for routing, state management, data fetching, and UI components.",
             "dependencies": [],
             "details": "Use `npm create vite@latest my-app -- --template react-ts`. After initialization, install and configure TailwindCSS according to its official documentation. Install the following dependencies: `react-router-dom`, `zustand`, `@tanstack/react-query`, and `lucide-react`. Initialize `shadcn/ui` which will handle component installation. Configure path aliases in `tsconfig.json` and `vite.config.js` for the planned folder structure (e.g., `@/components/*`).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `npm run dev` to ensure the application compiles and launches successfully. Verify that a basic TailwindCSS class (e.g., `bg-red-500`) correctly styles a test element. Check `package.json` to confirm all specified dependencies are installed."
           },
           {
@@ -570,7 +570,7 @@
               1
             ],
             "details": "Create the following directories inside `/src`: `components`, `pages`, `hooks`, `store`, `api`, `utils`, `types`, and `styles`. In `/src/styles`, create a `globals.css` file for base styles and import it into `main.tsx`. Configure `tailwind.config.js` with the Nova design system's theme specifications (colors, fonts, spacing).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Manually inspect the `/src` directory to confirm all folders have been created. Create a sample component and import a utility from the `utils` folder using the path alias (`@/utils/helpers`) to ensure aliases are working correctly."
           },
           {
@@ -581,7 +581,7 @@
               2
             ],
             "details": "In a new file, e.g., `/src/App.tsx`, use `createBrowserRouter` from `react-router-dom` to define the routes: `/login`, `/profile`, `/subscriptions`, and `/admin`. For each route, create a corresponding placeholder component in the `/src/pages` directory (e.g., `LoginPage.tsx`, `ProfilePage.tsx`). Each placeholder should render a simple heading identifying the page.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Start the development server. Manually navigate to each defined URL (`/login`, `/profile`, etc.) in the browser and verify that the correct page component's heading is displayed. Check the browser console for any routing-related errors."
           },
           {
@@ -592,7 +592,7 @@
               3
             ],
             "details": "Create a `Layout.tsx` component in `/src/components/layout/`. This component will render a header with the logo and navigation links for 'Subscriptions' and 'Profile'. It will also include a placeholder for user information. Use the `<Outlet />` component from React Router to render the active child route. Update the router configuration to use this `Layout` component as a parent route for `/profile`, `/subscriptions`, and `/admin`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the header and navigation are consistently displayed when navigating between the `/profile` and `/subscriptions` pages. Confirm the layout is not present on the `/login` page. Ensure navigation links work correctly."
           },
           {
@@ -603,7 +603,7 @@
               4
             ],
             "details": "Create a mock authentication hook `useAuth` using Zustand that provides user state (e.g., `isAuthenticated`, `user: { role: 'admin' | 'user' }`). Create a `ProtectedRoute` component that uses this hook to check for authentication. If the user is not authenticated, it should use `<Navigate to='/login' />`. Wrap the `/profile`, `/subscriptions`, and `/admin` routes with this `ProtectedRoute`. In the `Layout.tsx` component, use the `useAuth` hook to conditionally render the 'Admin' navigation link only if `user.role === 'admin'`. ",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "When not authenticated, attempt to access `/profile` and verify redirection to `/login`. After mocking an authenticated non-admin user state, verify that the 'Admin' link is hidden. After mocking an admin user state, verify the 'Admin' link is visible and `/admin` is accessible."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T11:58:40.839Z",
+      "updated": "2025-06-29T14:55:27.141Z",
       "description": "Tasks for master context"
     }
   }

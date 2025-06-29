@@ -1,0 +1,63 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# PNPM Package Manager Rule
+
+**This project uses pnpm as the package manager. Always use pnpm commands instead of npm or yarn.**
+
+## **Required Commands:**
+
+- **Install dependencies:** `pnpm install` (not `npm install` or `yarn install`)
+- **Add packages:** `pnpm add <package>` (not `npm install <package>`)
+- **Add dev dependencies:** `pnpm add -D <package>` (not `npm install --save-dev <package>`)
+- **Remove packages:** `pnpm remove <package>` (not `npm uninstall <package>`)
+- **Run scripts:** `pnpm run <script>` or `pnpm <script>` (not `npm run <script>`)
+- **Global installs:** `pnpm add -g <package>` (not `npm install -g <package>`)
+
+## **Project Evidence:**
+- The project already has `pnpm-lock.yaml` in the frontend directory
+- No `package-lock.json` or `yarn.lock` files should be created
+
+## **DO Examples:**
+```bash
+# ✅ Install dependencies
+pnpm install
+
+# ✅ Add a new package
+pnpm add react-router-dom
+
+# ✅ Add dev dependency
+pnpm add -D @types/node
+
+# ✅ Run development server
+pnpm dev
+
+# ✅ Execute scripts
+pnpm run build
+```
+
+## **DON'T Examples:**
+```bash
+# ❌ Never use npm
+npm install
+npm add react-router-dom
+npm run dev
+
+# ❌ Never use yarn
+yarn install
+yarn add react-router-dom
+yarn dev
+```
+
+## **When Suggesting Commands:**
+- Always provide pnpm commands in code examples
+- If user asks about package management, mention pnpm
+- In documentation and README files, use pnpm commands
+- In package.json scripts, assume pnpm execution context
+
+## **Lock File Management:**
+- Commit `pnpm-lock.yaml` to version control
+- Never commit `package-lock.json` or `yarn.lock`
+- If other lock files exist, they should be removed and added to `.gitignore`
