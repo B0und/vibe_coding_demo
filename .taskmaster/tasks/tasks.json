@@ -757,7 +757,7 @@
           6,
           10
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -765,7 +765,7 @@
             "description": "Implement the four required API client functions (`getEvents`, `getUserSubscriptions`, `subscribeToEvent`, `unsubscribeFromEvent`) and set up the initial data fetching logic using React Query's `useQuery` to fetch all available events and the current user's subscriptions.",
             "dependencies": [],
             "details": "Create a new module for the subscription API client. Implement the four functions to interact with the backend endpoints. Create a custom React hook (e.g., `useSubscriptionData`) that uses `useQuery` with separate query keys for 'events' and 'userSubscriptions'. This hook should be responsible for fetching both datasets and providing a combined data structure that indicates the subscription status for each event.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test each API client function using a mocked API (e.g., MSW). Write integration tests for the custom hook to ensure it correctly fetches, caches, and merges the data from the two queries."
           },
           {
@@ -776,7 +776,7 @@
               1
             ],
             "details": "Use components from the Nova design system (`Table`, `Checkbox`, `Typography`, etc.) to construct the UI as specified in the PRD. The `SubscriptionsTable` component will receive the combined event/subscription data as a prop from its parent, which uses the hook from subtask 1. Ensure the layout, spacing, and typography match the design specifications. At this stage, the checkboxes should reflect the fetched subscription state but will not be interactive.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create Storybook stories for the `SubscriptionsTable` component to cover various states: loading, error, empty, and populated with data. Use visual regression testing (e.g., Chromatic) to verify alignment with the Nova design system."
           },
           {
@@ -787,7 +787,7 @@
               2
             ],
             "details": "Introduce a local state variable in the `SubscriptionManagementPage` to manage the search query. Filter the event list based on this query before passing it to the `SubscriptionsTable` component. The filtering logic should be case-insensitive. Use the `Input` component from the Nova design system for the search field.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for the filtering utility function. Use an end-to-end testing tool like Cypress or Playwright to simulate user input and assert that the table rows are filtered correctly in the UI."
           },
           {
@@ -799,7 +799,7 @@
               2
             ],
             "details": "Create a `useSubscriptionMutation` hook that internally uses `useMutation`. The `onClick` handler for each checkbox will determine whether to call the subscribe or unsubscribe mutation based on the current checked state, passing the `eventId`. On a successful mutation (`onSuccess`), invalidate the 'userSubscriptions' query to refetch the latest data and ensure the UI is consistent with the backend state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Mock the `useMutation` hook in component tests to verify that clicking a checkbox calls the correct mutation with the correct `eventId`. Write E2E tests to simulate the full flow of toggling a subscription and verifying the state persists after a mock refetch."
           },
           {
@@ -810,7 +810,7 @@
               4
             ],
             "details": "Enhance the `useMutation` configuration. Use the `onMutate` callback to optimistically update the React Query cache, making the checkbox state change instantly. In `onMutate`, return a context object with the previous state. Use the `onError` callback to roll back the change using the context. Use the mutation's `isLoading` status to show a spinner or disable the checkbox for the specific row being modified. Use a Toast/Notification component from the Nova design system for error feedback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write component tests to verify the optimistic update and rollback logic. Use E2E tests with mocked API failures to ensure the UI correctly reverts to its original state and an error message is displayed. Create Storybook stories to visually test the row-specific loading state."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T17:58:05.654Z",
+      "updated": "2025-06-29T18:12:16.929Z",
       "description": "Tasks for master context"
     }
   }

@@ -1,123 +1,115 @@
 import { useState } from "react";
+import { Button, SearchInput, Card } from "../components/ui";
 import {
-  Button,
-  SearchInput,
-  Table,
-  Card,
-  type Column,
-} from "../components/ui";
-
-// Mock data for demonstration
-interface Subscription {
-  id: string;
-  eventTitle: string;
-  eventDate: string;
-  location: string;
-  status: "active" | "cancelled";
-  subscribedAt: string;
-}
-
-const mockSubscriptions: Subscription[] = [
-  {
-    id: "1",
-    eventTitle: "React Conference 2024",
-    eventDate: "2024-03-15",
-    location: "San Francisco, CA",
-    status: "active",
-    subscribedAt: "2024-01-10",
-  },
-  {
-    id: "2",
-    eventTitle: "TypeScript Workshop",
-    eventDate: "2024-02-20",
-    location: "Online",
-    status: "active",
-    subscribedAt: "2024-01-15",
-  },
-  {
-    id: "3",
-    eventTitle: "JavaScript Meetup",
-    eventDate: "2024-01-25",
-    location: "New York, NY",
-    status: "cancelled",
-    subscribedAt: "2024-01-05",
-  },
-];
+  useSubscriptionData,
+  useSubscriptionMutations,
+} from "../hooks/useSubscriptions";
+import SubscriptionsTable from "../components/SubscriptionsTable";
 
 export default function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState(mockSubscriptions);
+
+  // Fetch events and subscription data using the custom hook
+  const { data: events, isLoading, isError, error } = useSubscriptionData();
+
+  // Get mutation hooks for subscription toggling
+  const { subscribe, unsubscribe, loadingEventIds } =
+    useSubscriptionMutations();
+
+  // Filter events based on search term
+  const filteredEvents = events.filter(
+    (event) =>
+      event.systemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    const filtered = mockSubscriptions.filter(
-      (subscription) =>
-        subscription.eventTitle.toLowerCase().includes(value.toLowerCase()) ||
-        subscription.location.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredData(filtered);
   };
 
   const handleClear = () => {
     setSearchTerm("");
-    setFilteredData(mockSubscriptions);
   };
 
-  const columns: Column<Subscription>[] = [
-    {
-      key: "eventTitle",
-      title: "Event",
-      render: (value, record) => (
-        <div>
-          <div className="font-medium text-secondary-900">{value}</div>
-          <div className="text-sm text-secondary-500">{record.location}</div>
+  // Handle subscription toggle
+  const handleSubscriptionToggle = (
+    eventId: number,
+    shouldSubscribe: boolean
+  ) => {
+    if (shouldSubscribe) {
+      subscribe.mutate(eventId);
+    } else {
+      unsubscribe.mutate(eventId);
+    }
+  };
+
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-heading-2 text-secondary-900">
+            Event Subscriptions
+          </h1>
+          <p className="mt-2 text-body text-secondary-600">
+            Manage your event subscriptions and notification preferences.
+          </p>
         </div>
-      ),
-    },
-    {
-      key: "eventDate",
-      title: "Date",
-      render: (value) => new Date(value).toLocaleDateString(),
-    },
-    {
-      key: "status",
-      title: "Status",
-      align: "center",
-      render: (value) => (
-        <span
-          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-            value === "active"
-              ? "bg-success-100 text-success-800"
-              : "bg-error-100 text-error-800"
-          }`}
-        >
-          {value.charAt(0).toUpperCase() + value.slice(1)}
-        </span>
-      ),
-    },
-    {
-      key: "subscribedAt",
-      title: "Subscribed",
-      render: (value) => new Date(value).toLocaleDateString(),
-    },
-    {
-      key: "actions",
-      title: "Actions",
-      align: "right",
-      render: (_, record) => (
-        <div className="flex space-x-2">
-          <Button variant="secondary" size="sm">
-            View
-          </Button>
-          {record.status === "active" && (
-            <Button variant="tertiary" size="sm">
-              Unsubscribe
+        <Card>
+          <SubscriptionsTable
+            data={[]}
+            isLoading={true}
+            emptyText="Loading events..."
+          />
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (isError) {
+    return (
+      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-heading-2 text-secondary-900">
+            Event Subscriptions
+          </h1>
+          <p className="mt-2 text-body text-secondary-600">
+            Manage your event subscriptions and notification preferences.
+          </p>
+        </div>
+        <Card>
+          <div className="text-center py-12">
+            <div className="text-error-600 mb-4">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-secondary-900 mb-2">
+              Failed to load events
+            </h3>
+            <p className="text-secondary-600 mb-4">
+              {error?.message || "An error occurred while loading events."}
+            </p>
+            <Button variant="primary" onClick={() => window.location.reload()}>
+              Try Again
             </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -138,24 +130,47 @@ export default function SubscriptionsPage() {
               value={searchTerm}
               onSearch={handleSearch}
               onClear={handleClear}
-              placeholder="Search events or locations..."
+              placeholder="Search by system, event name, or description..."
               className="sm:max-w-xs"
             />
-            <Button variant="primary">Browse Events</Button>
+            <div className="text-body-small text-secondary-600">
+              {filteredEvents.length} events available
+            </div>
           </div>
 
-          {/* Results count */}
-          <div className="text-body-small text-secondary-600">
-            Showing {filteredData.length} of {mockSubscriptions.length}{" "}
-            subscriptions
+          {/* Subscription Statistics */}
+          <div className="flex gap-6 text-sm text-secondary-600 bg-secondary-50 px-4 py-3 rounded-lg">
+            <div>
+              <span className="font-medium text-secondary-900">
+                {events.filter((e) => e.subscribed).length}
+              </span>{" "}
+              subscribed
+            </div>
+            <div>
+              <span className="font-medium text-secondary-900">
+                {events.filter((e) => !e.subscribed).length}
+              </span>{" "}
+              available
+            </div>
+            <div>
+              <span className="font-medium text-secondary-900">
+                {events.length}
+              </span>{" "}
+              total events
+            </div>
           </div>
 
-          {/* Table */}
-          <Table
-            data={filteredData}
-            columns={columns}
-            emptyText="No subscriptions found. Try adjusting your search or browse available events."
-            onRowClick={(record) => console.log("Clicked:", record)}
+          {/* Subscriptions Table */}
+          <SubscriptionsTable
+            data={filteredEvents}
+            emptyText={
+              searchTerm
+                ? "No events match your search criteria. Try adjusting your search terms."
+                : "No events available at this time."
+            }
+            interactive={true}
+            onSubscriptionToggle={handleSubscriptionToggle}
+            loadingEventIds={loadingEventIds}
           />
         </div>
       </Card>

@@ -9,26 +9,25 @@ export interface User {
 }
 
 export interface Event {
-  id: string;
-  title: string;
+  id: number;
+  systemName: string;
+  eventName: string;
+  kafkaTopic: string;
   description: string;
-  eventDate: string;
-  location?: string;
-  maxParticipants?: number;
-  currentParticipants: number;
-  status: 'active' | 'cancelled' | 'completed';
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Subscription {
-  id: string;
-  userId: string;
-  eventId: string;
-  status: 'active' | 'cancelled';
-  subscribedAt: string;
-  event?: Event;
-  user?: User;
+  id: number;
+  eventId: number;
+  eventName: string;
+  systemName: string;
+  subscribed: boolean;
+}
+
+export interface EventWithSubscription extends Event {
+  subscribed: boolean;
 }
 
 export interface ApiResponse<T> {

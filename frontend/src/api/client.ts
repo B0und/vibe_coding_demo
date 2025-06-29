@@ -1,3 +1,5 @@
+import type { Event, Subscription } from '../types';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 // Type definitions for the API client
@@ -209,6 +211,55 @@ class ApiClient {
       body: data ? JSON.stringify(data) : undefined,
       ...config
     });
+  }
+
+  logout(): void {
+    localStorage.removeItem('authToken');
+  }
+
+  // Subscription Management API Methods
+  
+  /**
+   * Get all available events
+   * @returns Promise<Event[]>
+   */
+  async getEvents(): Promise<Event[]> {
+    return this.get<Event[]>('/events');
+  }
+
+  /**
+   * Get current user's subscriptions
+   * @returns Promise<Subscription[]>
+   */
+  async getUserSubscriptions(): Promise<Subscription[]> {
+    return this.get<Subscription[]>('/subscriptions');
+  }
+
+  /**
+   * Subscribe to an event
+   * @param eventId - The ID of the event to subscribe to
+   * @returns Promise<Subscription>
+   */
+  async subscribeToEvent(eventId: number): Promise<Subscription> {
+    return this.post<Subscription>(`/subscriptions/${eventId}`);
+  }
+
+  /**
+   * Unsubscribe from an event
+   * @param eventId - The ID of the event to unsubscribe from
+   * @returns Promise<void>
+   */
+  async unsubscribeFromEvent(eventId: number): Promise<void> {
+    return this.delete<void>(`/subscriptions/${eventId}`);
+  }
+
+  /**
+   * Check subscription status for a specific event
+   * @param eventId - The ID of the event to check
+   * @returns Promise<{eventId: number, subscribed: boolean}>
+   */
+  async getSubscriptionStatus(eventId: number): Promise<{eventId: number, subscribed: boolean}> {
+    return this.get<{eventId: number, subscribed: boolean}>(`/subscriptions/${eventId}/status`);
   }
 }
 
