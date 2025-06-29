@@ -111,7 +111,7 @@ function Table<T = any>({
               <tr
                 key={index}
                 className={classNames({
-                  "hover:bg-secondary-50 cursor-pointer": onRowClick,
+                  "hover:bg-secondary-50 cursor-pointer": !!onRowClick,
                   "bg-secondary-25": striped && index % 2 === 1,
                 })}
                 onClick={() => onRowClick?.(record, index)}

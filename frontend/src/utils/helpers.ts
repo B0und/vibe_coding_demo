@@ -18,11 +18,27 @@ export const formatDateTime = (dateString: string): string => {
   });
 };
 
-export const classNames = (...classes: (string | undefined | null | false)[]): string => {
-  return classes.filter(Boolean).join(' ');
+export const classNames = (...inputs: (string | undefined | null | false | Record<string, boolean | undefined | null>)[]): string => {
+  const classes: string[] = [];
+  
+  for (const input of inputs) {
+    if (!input) continue;
+    
+    if (typeof input === 'string') {
+      classes.push(input);
+    } else if (typeof input === 'object') {
+      for (const [key, value] of Object.entries(input)) {
+        if (value) {
+          classes.push(key);
+        }
+      }
+    }
+  }
+  
+  return classes.join(' ');
 };
 
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {

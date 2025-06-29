@@ -1,5 +1,5 @@
 import { Navigate } from "react-router";
-import { useAuth } from "../store/authStore";
+import { useIsAuthenticated } from "../hooks/useAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,7 +10,7 @@ export default function ProtectedRoute({
   children,
   requireAdmin = false,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useIsAuthenticated();
 
   // Show loading state while checking authentication
   if (isLoading) {

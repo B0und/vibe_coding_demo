@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "../store/authStore";
+import { useAuth } from "../hooks/useAuth";
 import { Button, Input } from "../components/ui";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
-  const { login, isLoading, error, isAuthenticated } = useAuth();
+  const { login, isLoginLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -26,7 +26,7 @@ export default function LoginPage() {
       await login(username.trim());
       // Navigation will happen automatically via useEffect when isAuthenticated changes
     } catch (error) {
-      // Error is already handled by the store and displayed via error state
+      // Error is automatically handled by the global error context
       console.error("Login failed:", error);
     }
   };
@@ -52,24 +52,18 @@ export default function LoginPage() {
               placeholder="Enter your username"
               required
               fullWidth
-              disabled={isLoading}
+              disabled={isLoginLoading}
             />
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
-              {error}
-            </div>
-          )}
 
           <Button
             type="submit"
             variant="primary"
             size="lg"
             fullWidth
-            disabled={isLoading || !username.trim()}
+            disabled={isLoginLoading || !username.trim()}
           >
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoginLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </div>

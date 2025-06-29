@@ -965,7 +965,7 @@
           9,
           10
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -973,7 +973,7 @@
             "description": "Create the foundational API client structure with generic methods for GET, POST, PUT, and DELETE using the Axios library. Ensure all methods and configurations are strongly typed with TypeScript.",
             "dependencies": [],
             "details": "Initialize a singleton Axios instance with a base URL. Implement the `api.get`, `api.post`, `api.put`, and `api.delete` functions as specified in the parent task. Define and apply TypeScript interfaces for `RequestConfig` and generic response types `<T>` to ensure type safety across all API calls.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use a mocking library like `axios-mock-adapter` or `msw` to write unit tests for each HTTP method. Verify that each function makes a request to the correct endpoint with the correct method and payload, and correctly returns the mocked response data."
           },
           {
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T17:35:10.383Z",
+      "updated": "2025-06-29T17:47:47.844Z",
       "description": "Tasks for master context"
     }
   }

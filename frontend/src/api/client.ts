@@ -1,5 +1,33 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+// Type definitions for the API client
+export interface RequestConfig {
+  headers?: Record<string, string>;
+  signal?: AbortSignal;
+}
+
+export interface ApiError {
+  message: string;
+  status?: number;
+  code?: string;
+  details?: unknown;
+}
+
+// Custom error class for API errors
+export class ApiClientError extends Error implements ApiError {
+  status?: number;
+  code?: string;
+  details?: unknown;
+
+  constructor(message: string, status?: number, code?: string, details?: unknown) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
 class ApiClient {
   private baseURL: string;
 
@@ -34,39 +62,157 @@ class ApiClient {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        await this.handleErrorResponse(response);
       }
       
-      return await response.json();
+      // Handle empty responses
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        return {} as T;
+      }
     } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+      if (error instanceof ApiClientError) {
+        throw error;
+      }
+      
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new ApiClientError(
+          'Network error. Please check your connection and try again.',
+          undefined,
+          'NETWORK_ERROR'
+        );
+      }
+      
+      throw new ApiClientError(
+        'An unexpected error occurred',
+        undefined,
+        'UNKNOWN_ERROR',
+        error
+      );
     }
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  private async handleErrorResponse(response: Response): Promise<never> {
+    let details: unknown;
+    let message = 'An unexpected error occurred';
+    const status = response.status;
+    let code: string;
+
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        details = await response.json();
+      } else {
+        details = await response.text();
+      }
+    } catch {
+      details = null;
+    }
+
+    switch (status) {
+      case 400:
+        message = 'Bad request. Please check your input.';
+        code = 'BAD_REQUEST';
+        break;
+      case 401:
+        message = 'Authentication required. Please log in.';
+        code = 'UNAUTHORIZED';
+        // Clear invalid token
+        localStorage.removeItem('authToken');
+        break;
+      case 403:
+        message = 'Access denied. You do not have permission to perform this action.';
+        code = 'FORBIDDEN';
+        break;
+      case 404:
+        message = 'Resource not found.';
+        code = 'NOT_FOUND';
+        break;
+      case 409:
+        message = 'Conflict. The resource already exists or cannot be modified.';
+        code = 'CONFLICT';
+        break;
+      case 422:
+        message = 'Invalid data provided.';
+        code = 'VALIDATION_ERROR';
+        break;
+      case 429:
+        message = 'Too many requests. Please try again later.';
+        code = 'RATE_LIMITED';
+        break;
+      case 500:
+        message = 'Internal server error. Please try again later.';
+        code = 'INTERNAL_ERROR';
+        break;
+      case 502:
+        message = 'Service temporarily unavailable.';
+        code = 'BAD_GATEWAY';
+        break;
+      case 503:
+        message = 'Service unavailable. Please try again later.';
+        code = 'SERVICE_UNAVAILABLE';
+        break;
+      default:
+        message = `Server error (${status}). Please try again later.`;
+        code = 'SERVER_ERROR';
+    }
+
+    // Try to extract a more specific error message from the response
+    if (details && typeof details === 'object' && details !== null) {
+      const errorObj = details as Record<string, unknown>;
+      if (typeof errorObj.message === 'string') {
+        message = errorObj.message;
+      } else if (typeof errorObj.error === 'string') {
+        message = errorObj.error;
+      }
+    }
+
+    throw new ApiClientError(message, status, code, details);
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async get<T>(endpoint: string, config?: RequestConfig): Promise<T> {
+    return this.request<T>(endpoint, { 
+      method: 'GET',
+      ...config
+    });
+  }
+
+  async post<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
+      ...config
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
+      ...config
     });
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  async delete<T>(endpoint: string, config?: RequestConfig): Promise<T> {
+    return this.request<T>(endpoint, { 
+      method: 'DELETE',
+      ...config
+    });
+  }
+
+  async patch<T>(endpoint: string, data?: unknown, config?: RequestConfig): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+      ...config
+    });
   }
 }
 
+// Create and export the singleton API client instance
 export const apiClient = new ApiClient(API_BASE_URL);
 
 // Authentication API functions
@@ -88,33 +234,20 @@ export interface AuthUser {
 
 export const authApi = {
   async login(username: string): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post<LoginResponse>('/users/register', {
-        username: username.trim()
-      });
-      
-      // Store the token in localStorage
-      if (response.token) {
-        localStorage.setItem('authToken', response.token);
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw new Error('Login failed. Please try again.');
+    const response = await apiClient.post<LoginResponse>('/users/register', {
+      username: username.trim()
+    });
+    
+    // Store the token in localStorage
+    if (response.token) {
+      localStorage.setItem('authToken', response.token);
     }
+    
+    return response;
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    try {
-      const user = await apiClient.get<AuthUser>('/users/me');
-      return user;
-    } catch (error) {
-      console.error('Failed to fetch current user:', error);
-      // Clear invalid token
-      localStorage.removeItem('authToken');
-      throw new Error('Failed to fetch user information.');
-    }
+    return apiClient.get<AuthUser>('/users/me');
   },
 
   logout(): void {

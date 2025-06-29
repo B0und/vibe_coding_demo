@@ -40,8 +40,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       baseInputClasses,
       inputStateClasses,
       {
-        "pl-10": leftIcon,
-        "pr-10": rightIcon,
+        "pl-10": !!leftIcon,
+        "pr-10": !!rightIcon,
         "w-full": fullWidth,
       },
       className
