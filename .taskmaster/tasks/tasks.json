@@ -10,7 +10,62 @@
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Git Repository and Project Structure",
+            "description": "Create a new Git repository and establish the top-level directory structure and placeholder files as specified.",
+            "dependencies": [],
+            "details": "Initialize a new Git repository. Create the root directories `frontend/` and `backend/`. Create empty placeholder files for `docker-compose.yml` and `README.md` at the project root.",
+            "status": "pending",
+            "testStrategy": "Verify that `git status` works in the root directory. Confirm the existence of the `frontend/` and `backend/` directories, and the `docker-compose.yml` and `README.md` files."
+          },
+          {
+            "id": 2,
+            "title": "Scaffold Frontend Application",
+            "description": "Set up the frontend project within the `frontend/` directory with React, TypeScript, TailwindCSS, and other specified libraries.",
+            "dependencies": [
+              1
+            ],
+            "details": "Navigate to the `frontend/` directory. Initialize a new React project using Vite with the TypeScript template. Install and configure TailwindCSS. Install the following libraries: `react-router-dom` (React Router), `zustand` (Zustand), `@tanstack/react-query` (Tanstack Query), and initialize `shadcn/ui` components.",
+            "status": "pending",
+            "testStrategy": "Run `npm install` and `npm run dev` inside the `frontend` directory. The default application should launch and be accessible in a web browser without any compilation or runtime errors."
+          },
+          {
+            "id": 3,
+            "title": "Scaffold Backend Application",
+            "description": "Set up the backend project within the `backend/` directory using Spring Boot and the specified dependencies.",
+            "dependencies": [
+              1
+            ],
+            "details": "Navigate to the `backend/` directory. Use Spring Initializr (start.spring.io) to generate a new Spring Boot 3.x project with Java 17 and Maven. Include the following dependencies: Spring Web, Spring Data JPA, PostgreSQL Driver, and Spring for Apache Kafka.",
+            "status": "pending",
+            "testStrategy": "Import the project into an IDE or run `./mvnw spring-boot:run` from the command line inside the `backend` directory. The application should start successfully on the embedded server (e.g., Tomcat) without errors."
+          },
+          {
+            "id": 4,
+            "title": "Configure Docker Compose for Local Development",
+            "description": "Create the `docker-compose.yml` file to orchestrate the frontend, backend, database, and messaging queue services.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Edit the `docker-compose.yml` file. Define services for: \n1. `frontend`: Uses a `Dockerfile` in the `frontend` directory to serve the React app in development mode. \n2. `backend`: Uses a `Dockerfile` in the `backend` directory to build and run the Spring Boot application. \n3. `postgres`: Uses the official `postgres` image, configures environment variables for user/password/db, and mounts a volume for data persistence. \n4. `zookeeper`: Uses a standard Zookeeper image. \n5. `kafka`: Uses a standard Kafka image, linked to the Zookeeper service.",
+            "status": "pending",
+            "testStrategy": "Run `docker-compose up --build` from the project root. Verify that all five containers start successfully and remain running. Check logs using `docker-compose logs` to ensure there are no connection errors between services."
+          },
+          {
+            "id": 5,
+            "title": "Create Initial README.md Documentation",
+            "description": "Populate the README.md with a project overview, technology stack, and detailed setup instructions.",
+            "dependencies": [
+              4
+            ],
+            "details": "Update the `README.md` file. Add a project title and brief description. List the key technologies used for both frontend and backend. Provide clear, step-by-step instructions on how to clone the repository and run the entire application stack using the single `docker-compose up` command. Mention any required prerequisites like Git and Docker.",
+            "status": "pending",
+            "testStrategy": "Ask a team member to perform a fresh checkout of the repository and follow only the instructions in the README.md. They should be able to get the entire project running locally without needing any additional guidance."
+          }
+        ]
       },
       {
         "id": 2,
@@ -23,7 +78,60 @@
           1
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement `users` Table, JPA Entity, and Repository",
+            "description": "Create the `users` table in PostgreSQL as specified. Implement the corresponding `User` JPA entity class and the `UserRepository` Spring Data interface.",
+            "dependencies": [],
+            "details": "Define the `users` table with columns: `id` (PK), `username` (unique), `telegram_recipients`, `telegram_chat_id` (nullable), `created_at`, and `updated_at`. Create a `User` entity mapping these columns. Create a `UserRepository` interface extending `JpaRepository` and add a `findByUsername(String username)` method.",
+            "status": "pending",
+            "testStrategy": "Write an integration test to persist a `User` entity, then retrieve it by its ID and by its username to verify data integrity and query method functionality."
+          },
+          {
+            "id": 2,
+            "title": "Implement `events` Table, JPA Entity, and Repository",
+            "description": "Create the `events` table in PostgreSQL as specified. Implement the corresponding `Event` JPA entity class and the `EventRepository` Spring Data interface.",
+            "dependencies": [],
+            "details": "Define the `events` table with columns: `id` (PK), `system_name`, `event_name`, `kafka_topic`, `description`, `created_at`, and `updated_at`. Create an `Event` entity mapping these columns. Create an `EventRepository` interface extending `JpaRepository`.",
+            "status": "pending",
+            "testStrategy": "Write an integration test to save a new `Event` entity to the database and retrieve it by its ID, verifying all fields are correctly persisted and read."
+          },
+          {
+            "id": 3,
+            "title": "Implement `subscriptions` Table and `Subscription` JPA Entity with Relationships",
+            "description": "Create the `subscriptions` table in PostgreSQL with foreign keys to `users` and `events` and a unique constraint. Implement the `Subscription` JPA entity class with `@ManyToOne` relationships to `User` and `Event`.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Define the `subscriptions` table with columns: `id` (PK), `user_id` (FK to users.id), `event_id` (FK to events.id), and `created_at`. Add a unique constraint on (`user_id`, `event_id`). Create the `Subscription` entity with `@ManyToOne` annotations for the `user` and `event` fields, using `@JoinColumn` to specify the foreign key columns.",
+            "status": "pending",
+            "testStrategy": "Initial validation will occur in subsequent tasks. A basic test can be written to persist a `Subscription` entity after creating and persisting a `User` and an `Event`."
+          },
+          {
+            "id": 4,
+            "title": "Configure Bidirectional One-to-Many Relationships",
+            "description": "Update the `User` and `Event` entities to complete the bidirectional relationship with `Subscription` by adding the `@OneToMany` mappings.",
+            "dependencies": [
+              3
+            ],
+            "details": "In the `User` entity, add a `Set<Subscription> subscriptions` field annotated with `@OneToMany(mappedBy = \"user\", cascade = CascadeType.ALL, orphanRemoval = true)`. In the `Event` entity, add a `Set<Subscription> subscriptions` field annotated with `@OneToMany(mappedBy = \"event\", cascade = CascadeType.ALL, orphanRemoval = true)`.",
+            "status": "pending",
+            "testStrategy": "Write an integration test that creates a user and an event, then creates a subscription linking them. Retrieve the user and verify its `subscriptions` collection is not empty and contains the correct subscription. Do the same for the event."
+          },
+          {
+            "id": 5,
+            "title": "Implement `SubscriptionRepository` and Finalize Query Methods",
+            "description": "Create the `SubscriptionRepository` Spring Data interface and add any necessary custom query methods to it and other repositories.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create a `SubscriptionRepository` interface extending `JpaRepository`. Add a method `findByUserIdAndEventId(Long userId, Long eventId)` to the `SubscriptionRepository` to leverage the unique constraint for lookups. Verify all three repositories are complete.",
+            "status": "pending",
+            "testStrategy": "Write an integration test for the `findByUserIdAndEventId` method. Create a user, event, and subscription, then use the method with their IDs to retrieve the specific subscription and assert it is correct."
+          }
+        ]
       },
       {
         "id": 3,
@@ -36,7 +144,62 @@
           2
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement UserService and JWT Utility",
+            "description": "Create the core service logic for user management and JWT token operations. This includes user registration, user lookup, and the generation and validation of JWTs.",
+            "dependencies": [],
+            "details": "Create a `UserService` class that implements Spring's `UserDetailsService`. It should have a method for registering a new user by username, storing it in the database via the `UserRepository`. Create a separate `JwtUtil` class with methods to `generateToken(UserDetails userDetails)` and `validateToken(String token, UserDetails userDetails)`.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for `UserService` to verify user registration and lookup. Write separate unit tests for `JwtUtil` to confirm correct token generation and validation logic."
+          },
+          {
+            "id": 2,
+            "title": "Create JWT Authentication Filter",
+            "description": "Implement a custom filter to intercept incoming HTTP requests, extract the JWT from the Authorization header, and validate it.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `JwtAuthenticationFilter` class that extends `OncePerRequestFilter`. In the `doFilterInternal` method, check for the 'Authorization: Bearer <token>' header. If the token is present and valid (using `JwtUtil`), load the user details (using `UserService`) and set the authentication in the `SecurityContextHolder`.",
+            "status": "pending",
+            "testStrategy": "Unit test the filter's logic using mock requests and mock `JwtUtil` and `UserService` to verify it correctly extracts the token, handles missing tokens, and sets the security context upon successful validation."
+          },
+          {
+            "id": 3,
+            "title": "Configure Spring Security",
+            "description": "Set up the main Spring Security configuration to integrate the custom JWT filter, define security rules, and configure session management.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a `SecurityConfig` class annotated with `@Configuration` and `@EnableWebSecurity`. Configure the `HttpSecurity` bean to disable CSRF, set session creation policy to `STATELESS`, and define authorization rules. Permit all access to `/api/users/register` and require authentication for all other endpoints. Add the `JwtAuthenticationFilter` to the filter chain before the `UsernamePasswordAuthenticationFilter`.",
+            "status": "pending",
+            "testStrategy": "This component is primarily tested through integration tests in a later subtask. Unit testing can be complex, but one could mock the `HttpSecurity` builder to verify that the correct methods are called."
+          },
+          {
+            "id": 4,
+            "title": "Implement UserController Endpoints",
+            "description": "Create the REST controller with endpoints for user registration and retrieving the current user's information.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `UserController` class. Implement a `POST /api/users/register` endpoint that accepts a username, calls `userService.registerUser()`, generates a JWT using `JwtUtil`, and returns it. Implement a `GET /api/users/me` endpoint that retrieves the currently authenticated user from the `SecurityContext` and returns their details.",
+            "status": "pending",
+            "testStrategy": "Use `MockMvc` to write integration tests for the controller. Test the registration endpoint for successful user creation and token return. Test the `/me` endpoint in a later step once security is fully configured."
+          },
+          {
+            "id": 5,
+            "title": "Integration Testing for Authentication Flow",
+            "description": "Perform end-to-end integration testing to ensure the entire authentication and authorization flow works as expected.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Using `@SpringBootTest` and `MockMvc`, write tests for the complete flow. Test 1: Call `POST /api/users/register` and verify a 2xx response and a valid JWT. Test 2: Use the token from Test 1 to call `GET /api/users/me` and verify a 200 OK response with the correct user data. Test 3: Call `GET /api/users/me` without a token or with an invalid token and verify a 401 Unauthorized or 403 Forbidden response.",
+            "status": "pending",
+            "testStrategy": "This subtask is entirely focused on testing. The test plan involves using `MockMvc` to simulate real HTTP requests and assert the responses, status codes, and body content to validate the full security configuration."
+          }
+        ]
       },
       {
         "id": 4,
@@ -49,7 +212,60 @@
           3
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement and Secure User Profile API Endpoints",
+            "description": "Create the required PUT and POST endpoints in `UserController` for managing Telegram settings and secure them to ensure users can only modify their own data.",
+            "dependencies": [],
+            "details": "Define method stubs in `UserController` for: `PUT /api/users/profile/telegram-recipients`, `POST /api/users/profile/telegram-activation-code`, and `POST /api/users/telegram-activate`. Apply Spring Security to the first two endpoints to verify that the authenticated principal's username matches the user being modified. The `/telegram-activate` endpoint will be publicly accessible but its logic will rely on the secret code for validation.",
+            "status": "pending",
+            "testStrategy": "Write integration tests to verify that authenticated users can access their own profile endpoints but receive a 403 Forbidden error when attempting to access another user's profile. Test that unauthenticated requests are rejected with a 401 Unauthorized."
+          },
+          {
+            "id": 2,
+            "title": "Configure In-Memory Cache for Activation Codes",
+            "description": "Set up and configure a Caffeine-based in-memory cache to store temporary Telegram activation codes with a fixed expiration time.",
+            "dependencies": [],
+            "details": "Add the `spring-boot-starter-cache` and `caffeine` dependencies to the project. Create a `@Configuration` class to configure the `CacheManager`. Define a cache named 'activationCodes' with a time-to-live (TTL) of 10 minutes. Enable caching application-wide with `@EnableCaching`.",
+            "status": "pending",
+            "testStrategy": "Write a configuration test to ensure a `Cache` bean named 'activationCodes' is created and can be injected. Manually test by adding an item and verifying it expires after the configured duration."
+          },
+          {
+            "id": 3,
+            "title": "Implement Telegram Recipient Update Logic",
+            "description": "Develop the service layer logic to update a user's semicolon-separated list of Telegram recipients and connect it to the controller.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a `telegramRecipients` (String) field to the `User` entity. Implement the `UserService.updateTelegramRecipients(username, recipients)` method to find the user, update the field, and persist the changes. Wire this service method to the `PUT /api/users/profile/telegram-recipients` endpoint.",
+            "status": "pending",
+            "testStrategy": "Write a unit test for the `UserService` method to ensure it correctly updates the user entity. Write an integration test for the endpoint, sending a valid JWT and a new recipient list, then verifying the database state."
+          },
+          {
+            "id": 4,
+            "title": "Implement Activation Code Generation and Caching",
+            "description": "Implement the logic to generate a unique, one-time activation code for a user and store it in the configured cache.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement the `UserService.generateTelegramActivationCode(username)` method. The logic should generate a secure random 6-digit code. Use the configured 'activationCodes' cache to store the code, with the username as the key. Connect this service method to the `POST /api/users/profile/telegram-activation-code` endpoint, which should return the generated code in the response body.",
+            "status": "pending",
+            "testStrategy": "Write a unit test for the service method to verify that a code is generated and `Cache.put` is called with the correct key (username) and value (code). Write an integration test for the endpoint to ensure it returns a valid code and that the code is present in the cache."
+          },
+          {
+            "id": 5,
+            "title": "Implement Telegram Bot Activation Logic",
+            "description": "Develop the service and controller logic to validate an activation code and link a Telegram chat ID to the corresponding user account.",
+            "dependencies": [
+              4
+            ],
+            "details": "Add a `telegramChatId` (String) field to the `User` entity. Implement the `UserService.activateTelegramBot(code, chatId)` method. The logic should look up the username from the 'activationCodes' cache using the provided code. If found, update the corresponding user's `telegramChatId` and save the user. Invalidate the code from the cache upon successful activation. Implement the public `POST /api/users/telegram-activate` endpoint to call this service method. Handle errors for invalid or expired codes.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the service method covering success (code found, user updated, cache evicted), failure (code not found), and expired code scenarios. Write an integration test for the endpoint by first generating a code, then calling the activation endpoint with that code and a chat ID, and finally verifying the user's `telegramChatId` is updated in the database."
+          }
+        ]
       },
       {
         "id": 5,
@@ -62,7 +278,61 @@
           2
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Event Data Model, DTOs, and Mapper",
+            "description": "Create the core data structures for the event management feature. This includes the database entity, the data transfer objects for API communication, and the mapping logic between them.",
+            "dependencies": [],
+            "details": "Create the `Event` JPA entity with fields: id, systemName, eventName, kafkaTopic, description, createdAt, and updatedAt. Implement `EventDTO` for request bodies and `EventResponseDTO` for responses. Set up a mapper (e.g., using MapStruct or a manual helper class) to convert between the `Event` entity and the DTOs.",
+            "status": "pending",
+            "testStrategy": "Unit test the mapper to ensure all fields are correctly transferred between the entity and DTOs in both directions."
+          },
+          {
+            "id": 2,
+            "title": "Implement Data Persistence Layer (Repository)",
+            "description": "Create the repository interface responsible for all database interactions related to the Event entity.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create an `EventRepository` interface that extends a Spring Data JPA repository (e.g., `JpaRepository<Event, Long>`). This will provide standard CRUD methods (save, findById, findAll, deleteById) out of the box without needing a concrete implementation.",
+            "status": "pending",
+            "testStrategy": "Write an integration test using an in-memory database (like H2) to verify that the repository can successfully save and retrieve an Event entity."
+          },
+          {
+            "id": 3,
+            "title": "Implement Core Service Logic (Create, Read, Delete)",
+            "description": "Develop the business logic for creating, retrieving, and deleting events within the `EventService`.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `EventService`, inject the `EventRepository` and the mapper. Implement the logic for `createEvent(EventDTO)`, `getEventById(Long)`, `getAllEvents()`, and `deleteEvent(Long)`. The `createEvent` method should map the DTO to an entity and save it. The 'get' methods should retrieve data from the repository and map it to response DTOs. The `deleteEvent` method will use the repository to remove an event by its ID.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the `EventService` using a mocked `EventRepository`. Verify that the correct repository methods are called and that the service correctly handles data mapping and returns the expected DTOs."
+          },
+          {
+            "id": 4,
+            "title": "Implement Update Logic and Input Validation",
+            "description": "Implement the logic for updating an existing event and add validation constraints to the request DTO.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement the `updateEvent(Long id, EventDTO)` method in `EventService`. This method should first retrieve the existing event, update its fields from the provided DTO, and then save the changes. Add validation annotations (e.g., `@NotBlank`, `@NotNull`) to the fields in `EventDTO` to ensure that all required data is present and valid for both create and update operations.",
+            "status": "pending",
+            "testStrategy": "Unit test the `updateEvent` service logic with a mocked repository. Write integration tests that attempt to create/update events with invalid data (e.g., empty fields) to ensure a 400 Bad Request response is returned."
+          },
+          {
+            "id": 5,
+            "title": "Create Controller Endpoints and Global Exception Handling",
+            "description": "Expose the service logic through a REST controller and implement centralized error handling for the API.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create the `EventController` with endpoints for GET, POST, PUT, and DELETE, mapping to `/api/events` and `/api/events/{id}`. Each controller method will call the corresponding `EventService` method. Create a `@ControllerAdvice` class to handle exceptions globally. Specifically, handle `ResourceNotFoundException` to return a 404 status and `MethodArgumentNotValidException` (for validation failures) to return a 400 status with a descriptive error message.",
+            "status": "pending",
+            "testStrategy": "Write integration tests for each endpoint. Test the success cases (e.g., creating an event returns 201, getting an event returns 200 with the correct body) and failure cases (e.g., getting a non-existent event returns 404, creating with bad data returns 400)."
+          }
+        ]
       },
       {
         "id": 6,
@@ -77,7 +347,62 @@
           5
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Subscription Entity and Repository",
+            "description": "Create the `Subscription` JPA entity to model the relationship between a user and an event, and implement the `SubscriptionRepository` for database operations.",
+            "dependencies": [],
+            "details": "The `Subscription` entity should include fields for an auto-generated ID, a ManyToOne relationship to the `User` entity, and a ManyToOne relationship to the `Event` entity. A unique constraint should be added on the combination of user and event to prevent duplicate subscriptions. The `SubscriptionRepository` will extend `JpaRepository` and include custom query methods like `findByUserAndEvent` and `findAllByUser`.",
+            "status": "pending",
+            "testStrategy": "Write repository-level tests using an in-memory database (like H2) to verify that subscriptions can be created, retrieved by user, retrieved by user and event combination, and deleted successfully. Test the unique constraint violation."
+          },
+          {
+            "id": 2,
+            "title": "Implement SubscriptionDTO and Service Query Methods",
+            "description": "Create the `SubscriptionDTO` for API responses and implement the read-only methods `getUserSubscriptions` and `isUserSubscribed` in the `SubscriptionService`.",
+            "dependencies": [
+              1
+            ],
+            "details": "The `SubscriptionDTO` should contain `id`, `eventId`, `eventName`, `systemName`, and a `subscribed` boolean flag. The `getUserSubscriptions` method will fetch all subscriptions for a user and map them to a list of `SubscriptionDTOs`. The `isUserSubscribed` method will efficiently check for the existence of a subscription record and return a boolean.",
+            "status": "pending",
+            "testStrategy": "Unit test the service methods by mocking the `SubscriptionRepository`. Verify that `getUserSubscriptions` correctly transforms `Subscription` entities into `SubscriptionDTOs`. Test `isUserSubscribed` for both true and false scenarios."
+          },
+          {
+            "id": 3,
+            "title": "Implement Service Write Methods with Error Handling",
+            "description": "Implement the `subscribeToEvent` and `unsubscribeFromEvent` methods in `SubscriptionService`, including logic for handling business rule violations.",
+            "dependencies": [
+              1
+            ],
+            "details": "The `subscribeToEvent` method must first check if the event exists and if the user is already subscribed, throwing custom exceptions (`EventNotFoundException`, `AlreadySubscribedException`) if necessary. The `unsubscribeFromEvent` method must check if the user is actually subscribed before attempting deletion, throwing `NotSubscribedException` if not. Both methods will interact with the `UserRepository`, `EventRepository`, and `SubscriptionRepository`.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the service methods, mocking all repository dependencies. Create test cases for successful subscription and unsubscription. Crucially, test all failure paths: subscribing to a non-existent event, subscribing when already subscribed, and unsubscribing when not subscribed."
+          },
+          {
+            "id": 4,
+            "title": "Create SubscriptionController Endpoints",
+            "description": "Implement the `SubscriptionController` to expose the service logic via REST endpoints, ensuring it retrieves the authenticated user from the security context.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create a REST controller with the following mappings: `GET /api/subscriptions` (calls `getUserSubscriptions`), `POST /api/subscriptions/{eventId}` (calls `subscribeToEvent`), `DELETE /api/subscriptions/{eventId}` (calls `unsubscribeFromEvent`), and `GET /api/subscriptions/{eventId}/status` (calls `isUserSubscribed`). Each method will obtain the current principal's username from the `SecurityContextHolder` to enforce that users can only manage their own subscriptions.",
+            "status": "pending",
+            "testStrategy": "Use MockMvc to write integration tests for the controller layer. Mock the `SubscriptionService` to isolate the controller's responsibility. Test each endpoint for correct HTTP method mapping, path variable handling, and that the authenticated user's name is correctly passed to the service layer. Verify expected success status codes (200 OK, 201 Created, 204 No Content)."
+          },
+          {
+            "id": 5,
+            "title": "Implement Global Exception Handling and Secure Endpoints",
+            "description": "Create a `@ControllerAdvice` to handle custom exceptions thrown by the service layer and apply security configurations to the endpoints.",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement a global exception handler to catch `EventNotFoundException`, `AlreadySubscribedException`, and `NotSubscribedException`, returning appropriate HTTP status codes (404, 409, 404 respectively) and a consistent JSON error response body. Secure the endpoints using Spring Security to ensure all requests are authenticated.",
+            "status": "pending",
+            "testStrategy": "For the exception handler, update MockMvc tests to trigger exceptions from the mocked service and assert that the correct HTTP status and error response are returned. For security, write integration tests using Spring Security's test support (`@WithMockUser`) to verify that authenticated users can access the endpoints and unauthenticated requests receive a 401 Unauthorized or 403 Forbidden status."
+          }
+        ]
       },
       {
         "id": 7,
@@ -90,7 +415,61 @@
           4
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Bot Registration and Configuration",
+            "description": "Register the new bot with BotFather on Telegram to obtain the API token. Configure this token and the bot's username in the application's properties file.",
+            "dependencies": [],
+            "details": "Use the BotFather chat in Telegram to create a new bot and get its API token. Add the token and bot username to the Spring `application.properties` or `application.yml` file under keys like `telegram.bot.token` and `telegram.bot.username`.",
+            "status": "pending",
+            "testStrategy": "Verify that the application starts successfully and the configuration properties for the bot are loaded into the Spring Environment."
+          },
+          {
+            "id": 2,
+            "title": "Implement Core TelegramBotService Structure",
+            "description": "Create the initial `TelegramBotService` Spring component with a basic `sendMessage` method that can send a plain text message to a given chat ID.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `@Service` class named `TelegramBotService`. Inject the bot token from the configuration. Implement the `sendMessage(String chatId, String message)` method using a library like `telegrambots-spring-boot-starter` or a standard HTTP client to call the Telegram Bot API's `sendMessage` endpoint.",
+            "status": "pending",
+            "testStrategy": "Create a unit test for `TelegramBotService` that mocks the API call. Manually test by invoking the service to send a test message to a known chat ID."
+          },
+          {
+            "id": 3,
+            "title": "Implement Update Listener and Activation Logic",
+            "description": "Create a component to listen for Telegram updates, specifically handling the `/start <code>` command to activate a user by linking their chat ID.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement a component that extends `TelegramLongPollingBot` or uses a webhook to receive updates. In the `onUpdateReceived` method, parse messages starting with `/start`. Extract the activation code and call a `UserService` method to validate the code and save the user's `chatId`. This logic should be encapsulated in the `handleStartCommand(String chatId, String text)` method within `TelegramBotService`.",
+            "status": "pending",
+            "testStrategy": "Unit test the command parsing logic. Perform an integration test by sending a `/start <code>` message to the bot and verifying that the `UserService` is called correctly and the user's `chatId` is persisted in the database."
+          },
+          {
+            "id": 4,
+            "title": "Implement JSON to Human-Readable Message Formatting",
+            "description": "Enhance the `sendMessage` method to automatically format JSON string payloads into a structured, human-readable format with a header and key-value pairs.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a private helper method within `TelegramBotService` to parse a JSON string. This method should build a formatted string with an emoji header (e.g., 🔔) and list each key-value pair on a new line. The `sendMessage` method should be updated to use this formatter if the input message is a valid JSON string.",
+            "status": "pending",
+            "testStrategy": "Unit test the formatting method with various valid and malformed JSON strings. Test the `sendMessage` method to confirm it correctly sends formatted messages for JSON input and plain text for other strings."
+          },
+          {
+            "id": 5,
+            "title": "Add Error Handling and Retry Mechanism",
+            "description": "Implement a robust error handling and retry mechanism with exponential backoff for the `sendMessage` method to handle transient API or network failures.",
+            "dependencies": [
+              2
+            ],
+            "details": "Use Spring Retry (`@Retryable`, `@Backoff`) or a similar library to wrap the API call in the `sendMessage` method. Configure it for a set number of retries (e.g., 3) with an exponential backoff strategy (e.g., initial delay 1s, multiplier 2.0). Log each failed attempt. If all retries fail, log a final critical error.",
+            "status": "pending",
+            "testStrategy": "Unit test the retry logic by mocking the Telegram API client to throw transient exceptions and verify that the call is retried according to the backoff policy. Use WireMock in an integration test to simulate API failures and confirm the retry behavior."
+          }
+        ]
       },
       {
         "id": 8,
@@ -105,7 +484,62 @@
           7
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initial Kafka Consumer Configuration and Setup",
+            "description": "Establish the foundational Spring for Apache Kafka configuration. This includes setting up dependencies, defining consumer factory properties, and creating a basic, static listener to verify connectivity with the Kafka cluster.",
+            "dependencies": [],
+            "details": "1. Add the `spring-kafka` dependency to the project's build file.\n2. In `application.yml`, configure the Kafka bootstrap servers, a default consumer group ID, key/value deserializers (e.g., `StringDeserializer`), and the auto offset reset policy to `earliest`.\n3. Create a `KafkaConsumerConfig` class to define the `ConsumerFactory` and `ConcurrentKafkaListenerContainerFactory` beans.\n4. Implement a temporary test listener using the `@KafkaListener` annotation on a method to consume from a hardcoded topic to validate the setup.",
+            "status": "pending",
+            "testStrategy": "Run the application and use a Kafka command-line tool to produce a message to the test topic. Verify that the application's logs show the message being successfully consumed by the static listener."
+          },
+          {
+            "id": 2,
+            "title": "Implement Dynamic Listener Management Service",
+            "description": "Create a service responsible for the programmatic creation and destruction of Kafka listener containers. This service will be the core component for dynamically managing topic subscriptions.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create a `KafkaListenerService` interface and its implementation.\n2. Inject `KafkaListenerEndpointRegistry` and the `ConcurrentKafkaListenerContainerFactory` bean from subtask 1.\n3. Implement `startListeningToTopic(String topic)`: This method will programmatically create a `ConcurrentMessageListenerContainer` for the specified topic, assign a unique container ID, set its message listener, register it with the registry, and start it.\n4. Implement `stopListeningToTopic(String topic)`: This method will find the listener container by its ID in the registry and stop it.",
+            "status": "pending",
+            "testStrategy": "Write integration tests that call `startListeningToTopic`, produce a message to that topic, and assert that it's received. Then, call `stopListeningToTopic` and verify that subsequent messages are not received. Mock the `KafkaListenerEndpointRegistry` in unit tests."
+          },
+          {
+            "id": 3,
+            "title": "Develop Message Processing and Notification Logic",
+            "description": "Implement the business logic that executes when a message is received. This involves parsing the message, querying the database for subscribers, and dispatching notifications through the Telegram service.",
+            "dependencies": [
+              2
+            ],
+            "details": "1. Implement the `processMessage(String topic, String message)` method within `KafkaListenerService`. This method will be invoked by the dynamically created listeners.\n2. Use a JSON library (e.g., Jackson) to parse the incoming message string into a data transfer object (DTO).\n3. Based on the topic name, query the database to find the associated event and all users subscribed to it.\n4. For each subscribed user, format a notification string according to predefined templates.\n5. Call an existing `TelegramNotificationService` to send the formatted message to each user's Telegram ID.",
+            "status": "pending",
+            "testStrategy": "Unit test the `processMessage` method extensively. Mock the database repository and the `TelegramNotificationService`. Provide various message payloads and verify that the correct database queries are made and the notification service is called with the expected formatted messages."
+          },
+          {
+            "id": 4,
+            "title": "Implement Error Handling and Retry Mechanism",
+            "description": "Configure a robust error handling strategy for the consumer, including a retry policy for transient failures and a Dead-Letter Topic (DLT) for non-recoverable messages.",
+            "dependencies": [
+              3
+            ],
+            "details": "1. Configure a `DefaultErrorHandler` on the `ConcurrentKafkaListenerContainerFactory` bean.\n2. Set up a `FixedBackOff` policy for retries (e.g., 3 attempts with a 2-second interval) to handle transient exceptions like database connection issues.\n3. Configure the error handler to publish messages that fail after all retries to a designated Dead-Letter Topic (DLT), e.g., `original-topic.DLT`.\n4. Ensure that non-retriable exceptions, such as message parsing errors (`JsonParseException`), skip the retry logic and are sent directly to the DLT.\n5. Add comprehensive logging for retry attempts and messages moved to the DLT.",
+            "status": "pending",
+            "testStrategy": "In an integration test, send a message that causes a mocked transient exception; verify that retry attempts are logged and the message is eventually processed. Send a malformed JSON message and verify it is immediately published to the DLT without retries."
+          },
+          {
+            "id": 5,
+            "title": "Implement Startup Consumer Initialization",
+            "description": "Create a mechanism that automatically subscribes to all necessary topics when the application starts up, ensuring the service is immediately ready to process messages for all existing events.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "1. Create a component that implements Spring's `ApplicationListener<ApplicationReadyEvent>`.\n2. Inject the database repository for events and the `KafkaListenerService`.\n3. In the `onApplicationEvent` method, fetch all active event topics from the database.\n4. Iterate through the list of topics and invoke `kafkaListenerService.startListeningToTopic(topic)` for each one.\n5. Add logging to confirm which topics are being subscribed to during the application startup sequence.",
+            "status": "pending",
+            "testStrategy": "For an integration test, pre-populate the test database with several active event topics. Start the application and verify through logs that the startup listener identifies all topics and successfully initiates a consumer for each one. You can also inspect the `KafkaListenerEndpointRegistry` to confirm the containers are registered and running."
+          }
+        ]
       },
       {
         "id": 9,
@@ -118,7 +552,61 @@
           1
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize React Project and Install Dependencies",
+            "description": "Set up a new React project using Vite with TypeScript and TailwindCSS. Install all required dependencies for routing, state management, data fetching, and UI components.",
+            "dependencies": [],
+            "details": "Use `npm create vite@latest my-app -- --template react-ts`. After initialization, install and configure TailwindCSS according to its official documentation. Install the following dependencies: `react-router-dom`, `zustand`, `@tanstack/react-query`, and `lucide-react`. Initialize `shadcn/ui` which will handle component installation. Configure path aliases in `tsconfig.json` and `vite.config.js` for the planned folder structure (e.g., `@/components/*`).",
+            "status": "pending",
+            "testStrategy": "Run `npm run dev` to ensure the application compiles and launches successfully. Verify that a basic TailwindCSS class (e.g., `bg-red-500`) correctly styles a test element. Check `package.json` to confirm all specified dependencies are installed."
+          },
+          {
+            "id": 2,
+            "title": "Establish Project Directory Structure and Base Styles",
+            "description": "Create the specified folder structure within the `/src` directory to organize the application's code logically. Set up global styles and Tailwind configuration according to the Nova design system.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create the following directories inside `/src`: `components`, `pages`, `hooks`, `store`, `api`, `utils`, `types`, and `styles`. In `/src/styles`, create a `globals.css` file for base styles and import it into `main.tsx`. Configure `tailwind.config.js` with the Nova design system's theme specifications (colors, fonts, spacing).",
+            "status": "pending",
+            "testStrategy": "Manually inspect the `/src` directory to confirm all folders have been created. Create a sample component and import a utility from the `utils` folder using the path alias (`@/utils/helpers`) to ensure aliases are working correctly."
+          },
+          {
+            "id": 3,
+            "title": "Implement Basic Routing and Page Placeholders",
+            "description": "Configure React Router to handle the application's main routes and create placeholder components for each page to establish the navigation flow.",
+            "dependencies": [
+              2
+            ],
+            "details": "In a new file, e.g., `/src/App.tsx`, use `createBrowserRouter` from `react-router-dom` to define the routes: `/login`, `/profile`, `/subscriptions`, and `/admin`. For each route, create a corresponding placeholder component in the `/src/pages` directory (e.g., `LoginPage.tsx`, `ProfilePage.tsx`). Each placeholder should render a simple heading identifying the page.",
+            "status": "pending",
+            "testStrategy": "Start the development server. Manually navigate to each defined URL (`/login`, `/profile`, etc.) in the browser and verify that the correct page component's heading is displayed. Check the browser console for any routing-related errors."
+          },
+          {
+            "id": 4,
+            "title": "Develop Main Layout Component with Navigation",
+            "description": "Create a reusable layout component that includes a persistent header, navigation, and a content area for the routed pages, adhering to the Nova design system.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a `Layout.tsx` component in `/src/components/layout/`. This component will render a header with the logo and navigation links for 'Subscriptions' and 'Profile'. It will also include a placeholder for user information. Use the `<Outlet />` component from React Router to render the active child route. Update the router configuration to use this `Layout` component as a parent route for `/profile`, `/subscriptions`, and `/admin`.",
+            "status": "pending",
+            "testStrategy": "Verify that the header and navigation are consistently displayed when navigating between the `/profile` and `/subscriptions` pages. Confirm the layout is not present on the `/login` page. Ensure navigation links work correctly."
+          },
+          {
+            "id": 5,
+            "title": "Implement Route Protection and Conditional UI",
+            "description": "Secure the application by preventing unauthenticated access to protected pages and conditionally rendering UI elements based on user authorization.",
+            "dependencies": [
+              4
+            ],
+            "details": "Create a mock authentication hook `useAuth` using Zustand that provides user state (e.g., `isAuthenticated`, `user: { role: 'admin' | 'user' }`). Create a `ProtectedRoute` component that uses this hook to check for authentication. If the user is not authenticated, it should use `<Navigate to='/login' />`. Wrap the `/profile`, `/subscriptions`, and `/admin` routes with this `ProtectedRoute`. In the `Layout.tsx` component, use the `useAuth` hook to conditionally render the 'Admin' navigation link only if `user.role === 'admin'`. ",
+            "status": "pending",
+            "testStrategy": "When not authenticated, attempt to access `/profile` and verify redirection to `/login`. After mocking an authenticated non-admin user state, verify that the 'Admin' link is hidden. After mocking an admin user state, verify the 'Admin' link is visible and `/admin` is accessible."
+          }
+        ]
       },
       {
         "id": 10,
@@ -132,7 +620,62 @@
           9
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create API Client for Authentication",
+            "description": "Implement the API client functions responsible for communicating with the backend authentication endpoints.",
+            "dependencies": [],
+            "details": "Create a dedicated module for the API client. Implement and export two asynchronous functions: `login(username: string): Promise<User>` which sends a POST request with the username to the login endpoint, and `getCurrentUser(): Promise<User>` which sends a GET request to an endpoint to fetch the currently authenticated user's data, likely using a token from localStorage. Ensure robust error handling for network issues and non-2xx responses.",
+            "status": "pending",
+            "testStrategy": "Use a mocking library like MSW or Vitest mocks to simulate the backend API. Write unit tests for both `login` and `getCurrentUser` functions. Test for successful responses, ensuring the correct data is returned. Also, test for various error scenarios, such as 401 (Unauthorized), 404 (Not Found), and 500 (Server Error), verifying that the functions throw appropriate errors."
+          },
+          {
+            "id": 2,
+            "title": "Implement Zustand Store for User State",
+            "description": "Define and implement the Zustand store to manage the global user authentication state, including data, status, and actions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a new file for the Zustand store. Define the `UserState` interface as specified in the parent task. Implement the store creator, including initial state for `user`, `isAuthenticated`, `isLoading`, and `error`. Implement the `login`, `logout`, and `fetchUser` async actions. The `login` action will call the `login` API client function, store the received token in localStorage, and update the state. `fetchUser` will call `getCurrentUser`. `logout` will clear the token from localStorage and reset the store to its initial state. All async actions must manage `isLoading` and `error` states.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the Zustand store's actions. Mock the API client functions created in subtask 1. For each action (`login`, `logout`, `fetchUser`), test the sequence of state changes. For example, for `login`, verify that `isLoading` becomes true, then on success, `isAuthenticated` becomes true, `user` is populated, and `isLoading` becomes false. Test the failure case where `error` is populated and `isLoading` is reset."
+          },
+          {
+            "id": 3,
+            "title": "Develop Login Page Component",
+            "description": "Create the user interface for the login page, including the form and logic to interact with the authentication store.",
+            "dependencies": [
+              2
+            ],
+            "details": "Build a React component for the login page. It should contain a controlled form with a username input and a submit button. On form submission, it should call the `login` action from the Zustand store. The component must use the `isLoading` and `error` states from the store to provide user feedback, such as disabling the button during the request or displaying an error message on failure. Upon successful login (detected by a change in `isAuthenticated` state), it should redirect the user to the subscriptions page using a routing library.",
+            "status": "pending",
+            "testStrategy": "Use React Testing Library to test the Login page component. Mock the Zustand store hook. Test that the component renders correctly. Simulate user typing into the input and clicking the submit button. Verify that the `login` action from the mocked store is called with the correct username. Test that loading indicators and error messages are displayed correctly based on the mocked store's state."
+          },
+          {
+            "id": 4,
+            "title": "Implement AuthProvider and `useAuth` Hook",
+            "description": "Create a high-level `AuthProvider` component to initialize the auth state on app load and a `useAuth` hook for easy consumption of the store.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create an `AuthProvider` component that wraps the main application layout. In a `useEffect` with an empty dependency array, it should check for a token in localStorage. If a token exists, it should call the `fetchUser` action from the Zustand store. This component ensures session persistence across page reloads. Also, create a custom hook `useAuth` which will be a simple wrapper around the Zustand store hook (`const useAuth = useUserStore;`) to provide a clean, semantic API for other components to access auth state and actions.",
+            "status": "pending",
+            "testStrategy": "Using React Testing Library, test the `AuthProvider` component. In one test, simulate no token in localStorage and assert that `fetchUser` is not called. In another test, mock localStorage to contain a token and assert that the `fetchUser` action (from a mocked store) is called on mount. For the `useAuth` hook, a simple unit test can confirm it returns the expected state and functions from the mocked store."
+          },
+          {
+            "id": 5,
+            "title": "Implement Protected Routes and Logout Functionality",
+            "description": "Secure application routes to be accessible only to authenticated users and provide a mechanism for users to log out.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create a `ProtectedRoute` component that uses the `useAuth` hook to check the `isAuthenticated` state. If the user is not authenticated, it should redirect them to the login page. Wrap the subscriptions page and any other private routes with this `ProtectedRoute` component. Add a 'Logout' button to a shared component like a navbar. The button's `onClick` handler should call the `logout` function obtained from the `useAuth` hook. The reactive nature of the store and protected routes will handle the redirect to the login page automatically.",
+            "status": "pending",
+            "testStrategy": "Test the `ProtectedRoute` component. Render it with a mocked `useAuth` hook returning `isAuthenticated: false` and verify it redirects. Then render it with `isAuthenticated: true` and verify it renders its children. For the logout feature, write a component test for the navbar/component containing the logout button. Simulate a click and assert that the `logout` function from the mocked `useAuth` hook is called."
+          }
+        ]
       },
       {
         "id": 11,
@@ -146,7 +689,62 @@
           10
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Profile Page Shell and Component Structure",
+            "description": "Set up the basic routing for the user profile page and create the main `Profile` component. This component will serve as the container for all other features and should be structured with placeholders for the user info, recipients, and bot activation sections, adhering to the Nova design system for layout.",
+            "dependencies": [],
+            "details": "Create a new route for `/profile`. Implement the main `Profile.tsx` component. Inside, define three distinct sections using Nova components (e.g., Card, Stack, Heading). The first section should display the user's username (can be static/mocked for now). The other two sections will house the components from subtasks 3 and 4.",
+            "status": "pending",
+            "testStrategy": "Verify that navigating to the `/profile` route renders the new page. Use visual snapshot testing or manual inspection to confirm the page layout, including the three main sections, conforms to the Nova design system specifications."
+          },
+          {
+            "id": 2,
+            "title": "Implement API Client Functions for Profile Management",
+            "description": "Create and configure the API client functions required for the profile page to communicate with the backend. This includes functions for updating Telegram recipients and generating a bot activation code.",
+            "dependencies": [],
+            "details": "In the designated API client module, implement and export two asynchronous functions: `updateTelegramRecipients(recipients: string): Promise<void>` which will send a PUT/POST request to the user's endpoint, and `generateActivationCode(): Promise<{ code: string }>` which will call the endpoint to get a new one-time code. Ensure they handle request/response logic correctly.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for both API client functions. Use a mocking library (like `msw` or `jest.mock`) to simulate API responses and verify that the functions make requests to the correct endpoints with the expected payloads and correctly handle both successful and error responses."
+          },
+          {
+            "id": 3,
+            "title": "Develop Telegram Recipients Management Form",
+            "description": "Implement the form within the profile page that allows users to manage their list of Telegram recipients. This includes the input field, validation, and the save functionality.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a `TelegramRecipientsForm` component. It should contain a text field for semicolon-separated usernames and a 'Save' button. Implement client-side validation to check for the correct format. On 'Save', the component should call the `updateTelegramRecipients` API function with the field's value.",
+            "status": "pending",
+            "testStrategy": "Write component tests to verify the validation logic for the input field. Create an integration test where you input data, click 'Save', and assert that the `updateTelegramRecipients` API function is called with the correct arguments."
+          },
+          {
+            "id": 4,
+            "title": "Implement Telegram Bot Activation Flow",
+            "description": "Build the UI and logic for the bot activation process. This involves generating and displaying an activation code with instructions, and showing the current activation status.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a `BotActivation` component. Include a button to trigger the `generateActivationCode` API call. Upon receiving the code, display it clearly along with the instructional text: '1. Find our bot in Telegram: @YourNotifierBotName. 2. Send it the message: /start <code>.'. Also, fetch and display the user's current activation status (e.g., a 'Status: Active' badge) when the component loads.",
+            "status": "pending",
+            "testStrategy": "Write an integration test to confirm that clicking the 'Generate Code' button calls the API and displays the returned code and instructions. Manually verify that the activation status indicator correctly reflects the user's data upon page load."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Loading, Success, and Error States",
+            "description": "Enhance the user experience by implementing comprehensive state management for all asynchronous operations on the profile page, providing clear visual feedback to the user.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "For the recipients form, disable the 'Save' button and show a loading indicator while the update request is in flight. Display a toast or inline message for success or error outcomes. For the bot activation, disable the 'Generate Code' button and show a loader during the API call, and display an error message if the code generation fails. Ensure all states follow Nova design system patterns for notifications and loaders.",
+            "status": "pending",
+            "testStrategy": "Use Storybook or a similar tool to create stories for each component's various states (idle, loading, success, error). Manually test the end-to-end flows by mocking API responses with delays or errors to ensure the UI updates correctly and provides the intended feedback."
+          }
+        ]
       },
       {
         "id": 12,
@@ -160,7 +758,62 @@
           10
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create API Client and Initial Data Fetching Hooks",
+            "description": "Implement the four required API client functions (`getEvents`, `getUserSubscriptions`, `subscribeToEvent`, `unsubscribeFromEvent`) and set up the initial data fetching logic using React Query's `useQuery` to fetch all available events and the current user's subscriptions.",
+            "dependencies": [],
+            "details": "Create a new module for the subscription API client. Implement the four functions to interact with the backend endpoints. Create a custom React hook (e.g., `useSubscriptionData`) that uses `useQuery` with separate query keys for 'events' and 'userSubscriptions'. This hook should be responsible for fetching both datasets and providing a combined data structure that indicates the subscription status for each event.",
+            "status": "pending",
+            "testStrategy": "Unit test each API client function using a mocked API (e.g., MSW). Write integration tests for the custom hook to ensure it correctly fetches, caches, and merges the data from the two queries."
+          },
+          {
+            "id": 2,
+            "title": "Build Static Subscriptions Table and Page Layout",
+            "description": "Create the main `SubscriptionManagementPage` and a `SubscriptionsTable` component. The table should render the list of events fetched from the API, displaying columns for subscription status (checkbox), system name, event name, and description. This initial version will be static and read-only.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use components from the Nova design system (`Table`, `Checkbox`, `Typography`, etc.) to construct the UI as specified in the PRD. The `SubscriptionsTable` component will receive the combined event/subscription data as a prop from its parent, which uses the hook from subtask 1. Ensure the layout, spacing, and typography match the design specifications. At this stage, the checkboxes should reflect the fetched subscription state but will not be interactive.",
+            "status": "pending",
+            "testStrategy": "Create Storybook stories for the `SubscriptionsTable` component to cover various states: loading, error, empty, and populated with data. Use visual regression testing (e.g., Chromatic) to verify alignment with the Nova design system."
+          },
+          {
+            "id": 3,
+            "title": "Implement Real-time Search and Filtering",
+            "description": "Add a text input field above the subscriptions table. Implement client-side logic to filter the displayed events in real-time as the user types. The filter should match the input text against the system name, event name, and description fields.",
+            "dependencies": [
+              2
+            ],
+            "details": "Introduce a local state variable in the `SubscriptionManagementPage` to manage the search query. Filter the event list based on this query before passing it to the `SubscriptionsTable` component. The filtering logic should be case-insensitive. Use the `Input` component from the Nova design system for the search field.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the filtering utility function. Use an end-to-end testing tool like Cypress or Playwright to simulate user input and assert that the table rows are filtered correctly in the UI."
+          },
+          {
+            "id": 4,
+            "title": "Implement Subscription Toggling with API Mutations",
+            "description": "Enable checkbox interactivity to update subscription status. Use React Query's `useMutation` to create hooks for `subscribeToEvent` and `unsubscribeFromEvent`. Trigger the appropriate mutation when a user clicks a checkbox.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a `useSubscriptionMutation` hook that internally uses `useMutation`. The `onClick` handler for each checkbox will determine whether to call the subscribe or unsubscribe mutation based on the current checked state, passing the `eventId`. On a successful mutation (`onSuccess`), invalidate the 'userSubscriptions' query to refetch the latest data and ensure the UI is consistent with the backend state.",
+            "status": "pending",
+            "testStrategy": "Mock the `useMutation` hook in component tests to verify that clicking a checkbox calls the correct mutation with the correct `eventId`. Write E2E tests to simulate the full flow of toggling a subscription and verifying the state persists after a mock refetch."
+          },
+          {
+            "id": 5,
+            "title": "Add Loading, Error States, and Optimistic Updates",
+            "description": "Refine the user experience by implementing optimistic updates for subscription toggling. Show a loading indicator on the specific row being updated and handle API errors gracefully by displaying a notification and rolling back the UI state.",
+            "dependencies": [
+              4
+            ],
+            "details": "Enhance the `useMutation` configuration. Use the `onMutate` callback to optimistically update the React Query cache, making the checkbox state change instantly. In `onMutate`, return a context object with the previous state. Use the `onError` callback to roll back the change using the context. Use the mutation's `isLoading` status to show a spinner or disable the checkbox for the specific row being modified. Use a Toast/Notification component from the Nova design system for error feedback.",
+            "status": "pending",
+            "testStrategy": "Write component tests to verify the optimistic update and rollback logic. Use E2E tests with mocked API failures to ensure the UI correctly reverts to its original state and an error message is displayed. Create Storybook stories to visually test the row-specific loading state."
+          }
+        ]
       },
       {
         "id": 13,
@@ -174,7 +827,63 @@
           10
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "API Client and React Query Setup for Event Management",
+            "description": "Create the API client functions for event CRUD operations and configure React Query for data fetching, caching, and state management.",
+            "dependencies": [],
+            "details": "Implement the API client functions: `getEvents`, `createEvent(event)`, `updateEvent(id, event)`, and `deleteEvent(id)`. Set up React Query client and create custom hooks (`useEvents`, `useCreateEvent`, `useUpdateEvent`, `useDeleteEvent`) to encapsulate API calls and manage server state, including invalidation logic for automatic UI updates.",
+            "status": "pending",
+            "testStrategy": "Unit test the API client functions with mock API responses. Test the custom React Query hooks to ensure they correctly handle loading, success, and error states."
+          },
+          {
+            "id": 2,
+            "title": "Implement Event List Table View",
+            "description": "Develop the main Admin component that displays all event definitions in a table, adhering to the Nova design system.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create the `AdminPanel` component. Use the `useEvents` hook to fetch and display data. The table, built with Nova components, must include columns for 'System name', 'Event name', 'Kafka topic', 'Description', and an 'Actions' column. Implement loading and error state UI based on the React Query hook's status.",
+            "status": "pending",
+            "testStrategy": "Component tests to verify the table renders correctly with mock data, including loading and error states. Visual regression testing against Nova design system specifications to ensure compliance."
+          },
+          {
+            "id": 3,
+            "title": "Create Reusable Event Form and 'Add Event' Modal",
+            "description": "Build the event form component and integrate it within a modal that is triggered by an 'Add Event' button.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a reusable `EventForm` component with validated fields for system name, event name, Kafka topic, and description. On the `AdminPanel`, add an 'Add Event' button that opens a Nova modal containing this form. Form submission should trigger the `useCreateEvent` mutation. On success, the modal should close and the event table should refresh.",
+            "status": "pending",
+            "testStrategy": "Unit test the form component's validation logic. Component test the modal interaction and form submission. End-to-end test the flow: click 'Add Event', fill form, submit, and verify the new event appears in the table."
+          },
+          {
+            "id": 4,
+            "title": "Implement Edit Event Functionality",
+            "description": "Wire up the 'Edit' button in the event table to open the form modal, pre-filled with the selected event's data, for updating.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Add an 'Edit' button to the 'Actions' column for each table row. Clicking it should open the `EventForm` modal, populated with the data of the corresponding event. The form's submit handler must call the `useUpdateEvent` mutation. On successful update, the table should reflect the changes.",
+            "status": "pending",
+            "testStrategy": "End-to-end test: click 'Edit', verify form is pre-filled, change a value, submit, and confirm the table is updated. Component test to ensure the form is correctly populated with initial data when in edit mode."
+          },
+          {
+            "id": 5,
+            "title": "Implement Delete Event Functionality with Confirmation",
+            "description": "Add a 'Delete' button to the event table that triggers a confirmation dialog before calling the delete API.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add a 'Delete' button to the 'Actions' column for each table row. Clicking this button must open a Nova confirmation dialog. If the user confirms, call the `useDeleteEvent` mutation with the event's ID. Upon successful deletion, the event list should automatically refresh.",
+            "status": "pending",
+            "testStrategy": "End-to-end test: click 'Delete', confirm the action in the dialog, and verify the event is removed from the table. Component test the confirmation dialog's cancel and confirm behaviors."
+          }
+        ]
       },
       {
         "id": 14,
@@ -187,7 +896,63 @@
           9
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup Project Foundation and TailwindCSS Configuration",
+            "description": "Initialize the component library project and configure TailwindCSS with the core design tokens from the Nova design system, including colors, typography, and spacing.",
+            "dependencies": [],
+            "details": "Create the initial project structure. In `tailwind.config.js`, define the custom color palette based on Nova specifications, creating CSS variables for light and dark themes. Configure the typography system with specified font families, weights, and sizes. Set up the spacing scale to match Nova's spacing units.",
+            "status": "pending",
+            "testStrategy": "Verify the `tailwind.config.js` is correctly processed by building the CSS. Create a sample HTML page to visually inspect that the custom utility classes for colors, fonts, and spacing are applied correctly and match the design system."
+          },
+          {
+            "id": 2,
+            "title": "Implement Atomic Components: Button, Input, Checkbox",
+            "description": "Develop the most basic, foundational UI components: Button, Input field, and Checkbox. Ensure all components are strongly typed with TypeScript and accept relevant props for customization.",
+            "dependencies": [
+              1
+            ],
+            "details": "Button: Implement primary, secondary, and tertiary variants, each with small, medium, and large size options. Input Field: Must include a label, optional helper text, and a distinct error state. Checkbox: Implement a standard checkbox with checked/unchecked states. All component props must be defined using TypeScript interfaces.",
+            "status": "pending",
+            "testStrategy": "Use Storybook to create stories for each component, covering all variants, sizes, and states (e.g., disabled, error). Write unit tests to verify prop handling and default values. Perform visual regression testing against the design specs."
+          },
+          {
+            "id": 3,
+            "title": "Implement Container Components: Card and Modal",
+            "description": "Build the Card and Modal dialog components, which act as containers for other content and components, following the Nova design system specifications.",
+            "dependencies": [
+              2
+            ],
+            "details": "Card: Create a flexible container component with slots for a header, body, and footer content. Modal: Implement a dialog that overlays the main UI. It should be controllable via props (e.g., `isOpen`) and include slots for a title, content, and action buttons (which will use the Button component from subtask 2).",
+            "status": "pending",
+            "testStrategy": "Develop Storybook stories that demonstrate the Card and Modal with various types of nested content. Write unit tests to check the logic for opening/closing the modal and for prop validation. Test responsiveness of the modal on different screen sizes."
+          },
+          {
+            "id": 4,
+            "title": "Implement Data-Driven Components: Table and Search Input",
+            "description": "Develop the Table and Search/Filter Input components, which are designed for displaying and interacting with datasets.",
+            "dependencies": [
+              2
+            ],
+            "details": "Table: Implement a responsive table component that accepts data (e.g., an array of objects) and column definitions as props to render a header and rows. Search/Filter Input: Create a specialized input component, potentially extending the base Input, with features like a search icon and a clear button.",
+            "status": "pending",
+            "testStrategy": "Use Storybook with mock data to test the rendering of the Table with different data sets (e.g., empty, large). Write unit tests for the data mapping and rendering logic. For the Search Input, test its state management and event emissions."
+          },
+          {
+            "id": 5,
+            "title": "Implement Dark Mode and Theme Switching Functionality",
+            "description": "Integrate dark mode support across all previously created components and implement a global theme-switching mechanism.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Implement a theme context and provider to manage the current theme (light/dark). Create a hook (e.g., `useTheme`) to access and toggle the theme. Update all components (Button, Input, Card, Modal, Table, etc.) using Tailwind's `dark:` variant modifier to ensure they adapt correctly to the selected theme based on the CSS variables defined in subtask 1.",
+            "status": "pending",
+            "testStrategy": "Add a global theme toggle to Storybook to test all components in both light and dark modes. Perform a full visual review of every component variant to ensure color contrast and style correctness in both themes. Add visual regression tests for both modes."
+          }
+        ]
       },
       {
         "id": 15,
@@ -201,7 +966,62 @@
           10
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Base Axios API Client",
+            "description": "Create the foundational API client structure with generic methods for GET, POST, PUT, and DELETE using the Axios library. Ensure all methods and configurations are strongly typed with TypeScript.",
+            "dependencies": [],
+            "details": "Initialize a singleton Axios instance with a base URL. Implement the `api.get`, `api.post`, `api.put`, and `api.delete` functions as specified in the parent task. Define and apply TypeScript interfaces for `RequestConfig` and generic response types `<T>` to ensure type safety across all API calls.",
+            "status": "pending",
+            "testStrategy": "Use a mocking library like `axios-mock-adapter` or `msw` to write unit tests for each HTTP method. Verify that each function makes a request to the correct endpoint with the correct method and payload, and correctly returns the mocked response data."
+          },
+          {
+            "id": 2,
+            "title": "Add Request and Response Interceptors",
+            "description": "Enhance the Axios instance with request and response interceptors. The request interceptor will handle authentication token injection, while the response interceptor will standardize the structure of successful and error responses.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement a request interceptor to automatically retrieve an authentication token (e.g., from localStorage) and add it to the `Authorization` header of every outgoing request. Implement a response interceptor to parse and return `response.data` on success, and to normalize the error object on failure, ensuring a consistent error structure for downstream handlers.",
+            "status": "pending",
+            "testStrategy": "For the request interceptor, test that the `Authorization` header is correctly added when a token exists. For the response interceptor, mock a successful response and assert that only the `data` is returned. Mock an error response and assert that the rejected promise contains a standardized error object."
+          },
+          {
+            "id": 3,
+            "title": "Implement Error Handling Logic and Retries",
+            "description": "Extend the response interceptor to handle specific HTTP error status codes (401, 403, 404, 500) and implement an automatic retry mechanism for transient network or server errors.",
+            "dependencies": [
+              2
+            ],
+            "details": "Within the response error handler, add logic to inspect `error.response.status`. For common client/server errors (403, 404, 500), format a user-friendly error message. For authentication errors (401), prepare a specific error type to trigger re-authentication. Integrate a library like `axios-retry` to automatically retry requests that fail due to transient issues (e.g., 502, 503, network error) using an exponential backoff strategy.",
+            "status": "pending",
+            "testStrategy": "Mock API responses with status codes 401, 403, 404, and 500 to verify that the interceptor formats and propagates the correct error types. To test retries, mock a 503 response and assert that the client re-attempts the request the configured number of times."
+          },
+          {
+            "id": 4,
+            "title": "Create Global Error Handling with React Context",
+            "description": "Develop a global error management system using React's Context API to display API errors as notifications and handle application-level side effects like redirection.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create an `ErrorContext` and an `ErrorProvider` to manage a global error state. The API client's error interceptor will push formatted errors into this context. Implement a consumer component, such as an `ErrorToast`, to display these errors to the user. The provider will also contain logic to listen for 401 errors and trigger a redirect to the login page.",
+            "status": "pending",
+            "testStrategy": "Using React Testing Library, wrap a test component in the `ErrorProvider`. Trigger a mocked API error and verify that the `ErrorToast` component renders with the correct message. Separately, test that when a 401 error is dispatched to the context, the application attempts to redirect (using a mock router)."
+          },
+          {
+            "id": 5,
+            "title": "Develop and Integrate `useApi` Hook",
+            "description": "Create a custom `useApi` React hook to provide a clean, reusable interface for interacting with the API client and its integrated error handling and cancellation features.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Develop the `useApi` hook that returns the fully configured API client instance. Integrate request cancellation logic using Axios's `AbortController`. The hook should provide an easy way to make API calls from components, where loading states can be managed locally, but errors are automatically handled by the global `ErrorContext`.",
+            "status": "pending",
+            "testStrategy": "Write a unit test for the hook to ensure it provides the API client methods. Use React Testing Library to test a component that utilizes the `useApi` hook. Verify that it can successfully fetch data. Test the cancellation logic by initiating a request and then triggering the cancellation, asserting that the request is aborted."
+          }
+        ]
       },
       {
         "id": 16,
@@ -217,7 +1037,63 @@
           14
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Establish Responsive Breakpoints and Core Layout",
+            "description": "Define the foundational CSS breakpoints as specified in the Nova design system and create the main application shell layout using CSS Grid and Flexbox.",
+            "dependencies": [],
+            "details": "Implement the sm, md, lg, and xl breakpoints in a global stylesheet or theme configuration. Structure the primary app layout (e.g., header, main content area, footer) to be flexible and serve as the base for all other pages. This initial setup is critical for all subsequent responsive work.",
+            "status": "pending",
+            "testStrategy": "Use browser developer tools to resize the viewport. Verify that the core layout structure responds correctly at the defined breakpoints (767px, 1023px, 1440px) without breaking or causing content overflow."
+          },
+          {
+            "id": 2,
+            "title": "Implement Responsive Navigation Component",
+            "description": "Develop the application's primary navigation to adapt to different screen sizes, featuring a full horizontal menu for desktops and a collapsible hamburger menu for mobile devices.",
+            "dependencies": [
+              1
+            ],
+            "details": "Using the defined breakpoints, create a navigation bar that displays all links horizontally on screens wider than 767px. For screens 767px and narrower, hide the horizontal links and display a hamburger icon that toggles a slide-out drawer menu.",
+            "status": "pending",
+            "testStrategy": "On viewports >=768px, confirm the full navigation bar is visible and all links are clickable. On viewports <768px, confirm the hamburger menu is displayed. Test the open/close functionality of the slide-out drawer and the functionality of the links within it."
+          },
+          {
+            "id": 3,
+            "title": "Adapt Page Layouts, Spacing, and Typography",
+            "description": "Refactor the layouts of all primary pages to ensure content reflows correctly. Adjust spacing, padding, and typography scales for optimal readability and usability across all breakpoints.",
+            "dependencies": [
+              1
+            ],
+            "details": "Apply CSS Grid and Flexbox to content sections within pages. For example, a multi-column layout on desktop should stack into a single column on mobile. Adjust heading sizes, body text font-size, and margins/padding using media queries to maintain visual hierarchy and prevent text from being too small or crowded on mobile screens.",
+            "status": "pending",
+            "testStrategy": "Systematically review each page of the application by resizing the browser window from large desktop down to mobile. Check for proper content reflow, ensure no horizontal scrolling is induced (except where intended), and verify that text is legible and spacing is appropriate at all sizes."
+          },
+          {
+            "id": 4,
+            "title": "Make Data Tables and Forms Responsive",
+            "description": "Ensure all data tables and form elements are usable on small screens and touch devices by implementing responsive patterns.",
+            "dependencies": [
+              1
+            ],
+            "details": "For wide data tables, wrap them in a container that enables horizontal scrolling on screens narrower than 768px. For forms, ensure input fields become full-width on mobile and that all interactive elements like buttons, checkboxes, and selects have larger touch targets to comply with mobile usability standards.",
+            "status": "pending",
+            "testStrategy": "On a page with a wide data table, shrink the viewport to a mobile width and verify that the table can be scrolled horizontally. On a form page, use a mobile emulator to confirm inputs are full-width and that buttons and other controls are easily tappable with a finger."
+          },
+          {
+            "id": 5,
+            "title": "Cross-Device Testing and Final Optimization",
+            "description": "Perform comprehensive end-to-end testing of the responsive implementation across various physical devices and emulators to catch inconsistencies and optimize performance.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Test the entire application on a curated list of devices, including different phone sizes (e.g., iPhone SE, iPhone Pro Max, Android), tablets (e.g., iPad), and desktop resolutions. Pay special attention to touch interactions, high-pixel-density (Retina) displays, and browser-specific quirks.",
+            "status": "pending",
+            "testStrategy": "Create a testing matrix covering key pages and target devices/browsers. Execute the test plan using a mix of real devices and browser emulation tools. Document and fix any identified bugs, such as layout breaks, non-functional touch elements, or blurry images on high-DPI screens."
+          }
+        ]
       },
       {
         "id": 17,
@@ -232,7 +1108,62 @@
           16
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Establish Performance Baseline and Setup Monitoring",
+            "description": "Configure performance monitoring tools and run initial tests to establish baseline metrics for key user flows, load times, and resource usage before any optimizations are made.",
+            "dependencies": [],
+            "details": "Set up Google Lighthouse for frontend audits, JMeter for backend load testing, and use a profiler like Spring Boot Actuator for endpoint metrics. Document initial values for First Contentful Paint (FCP), Largest Contentful Paint (LCP), Time to Interactive (TTI), bundle size, and average API response times for critical endpoints.",
+            "status": "pending",
+            "testStrategy": "Verify that all monitoring tools are correctly configured and collecting data. The deliverable is a baseline performance report that will be used for comparison after optimizations are implemented."
+          },
+          {
+            "id": 2,
+            "title": "Optimize Initial Load Time with Code Splitting and Asset Compression",
+            "description": "Reduce the initial application bundle size and optimize static asset delivery to improve key loading metrics like FCP and TTI.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement route-based code splitting using React.lazy and Suspense. Analyze the bundle with a tool like `webpack-bundle-analyzer` and apply tree-shaking by optimizing imports. Compress all static images (using WebP where supported) and implement lazy loading for off-screen images.",
+            "status": "pending",
+            "testStrategy": "Run Lighthouse and WebPageTest reports after implementation. Compare FCP, LCP, TTI, and total bundle size against the baseline established in subtask 1. A significant improvement in these metrics is expected."
+          },
+          {
+            "id": 3,
+            "title": "Accelerate Backend Data Retrieval with Caching and DB Query Tuning",
+            "description": "Reduce server response times by optimizing slow database queries and implementing a server-side cache for frequently accessed, non-volatile data.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use a database profiler to identify slow queries and add appropriate indexes to the relevant tables. Implement and configure Spring Cache with a suitable provider (e.g., Caffeine) on high-traffic, read-heavy API endpoints to reduce database load.",
+            "status": "pending",
+            "testStrategy": "Use JMeter to load test the targeted endpoints before and after optimization. Measure the average and 95th percentile response times and compare against the baseline to confirm a reduction in latency."
+          },
+          {
+            "id": 4,
+            "title": "Minimize Network Data Transfer with API Payload and Caching Strategies",
+            "description": "Optimize API communication by reducing payload size and leveraging HTTP caching mechanisms to decrease latency and bandwidth usage.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement pagination on all API endpoints that return lists of data. Enable Gzip/Brotli compression on the web server for all text-based responses. Implement ETag headers on GET requests to allow clients to perform conditional requests and receive 304 Not Modified responses.",
+            "status": "pending",
+            "testStrategy": "Use browser developer tools to inspect network requests. Verify that response payloads are compressed (check Content-Encoding header). Confirm that list endpoints are paginated and that ETag headers are present. Test that subsequent requests for the same resource return a 304 status."
+          },
+          {
+            "id": 5,
+            "title": "Enhance UI Fluidity by Optimizing React Rendering Performance",
+            "description": "Improve the application's runtime performance and responsiveness by preventing unnecessary component re-renders and efficiently rendering large data sets.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Audit key components for performance bottlenecks using the React Profiler. Apply `React.memo`, `useMemo`, and `useCallback` to memoize components and expensive calculations. For screens displaying large lists, replace standard mapping with a virtualized list component like `react-window`.",
+            "status": "pending",
+            "testStrategy": "Use the React Profiler to measure component render times and counts during typical user interactions (e.g., typing in a form, filtering a list). Confirm that render counts are reduced and that scrolling through large lists is smooth without frame drops."
+          }
+        ]
       },
       {
         "id": 18,
@@ -246,7 +1177,62 @@
           16
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Automated Accessibility Audit and Tooling Setup",
+            "description": "Establish a baseline for accessibility issues by running automated tools and integrating them into the development workflow to guide the implementation process.",
+            "dependencies": [],
+            "details": "Run full-site scans using axe DevTools and Google Lighthouse to generate an initial report of accessibility violations. Integrate an accessibility linting tool (e.g., eslint-plugin-jsx-a11y) into the CI/CD pipeline to catch new issues. Document the top 10 most frequent or critical issues to prioritize fixes.",
+            "status": "pending",
+            "testStrategy": "Verify that the automated tools are correctly configured in the development environment and CI pipeline by intentionally introducing and then fixing a simple accessibility error, such as an image missing an alt tag."
+          },
+          {
+            "id": 2,
+            "title": "Implement Semantic HTML and Content Structure",
+            "description": "Refactor the application's HTML to use semantic elements, a logical heading hierarchy, and proper form labeling to build a solid foundation for accessibility.",
+            "dependencies": [
+              1
+            ],
+            "details": "Audit and refactor all pages to ensure a single `<h1>` and a logical, non-skipping heading hierarchy (h2, h3, etc.). Replace non-semantic `div` elements with appropriate tags like `<nav>`, `<main>`, `<section>`, and `<footer>`. Ensure all form inputs are explicitly associated with a `<label>` tag.",
+            "status": "pending",
+            "testStrategy": "Manually inspect the DOM in browser developer tools to confirm the use of semantic tags and correct heading structure. Use a screen reader (NVDA/VoiceOver) to navigate by headings and forms to ensure elements are correctly identified."
+          },
+          {
+            "id": 3,
+            "title": "Ensure Full Keyboard Navigability and Focus Management",
+            "description": "Make all interactive components fully operable using only a keyboard, including logical tab order and highly visible focus indicators.",
+            "dependencies": [
+              2
+            ],
+            "details": "Review and fix the tab order across the application to ensure it follows a logical sequence. Implement a custom, highly visible `:focus-visible` style for all interactive elements. Ensure custom widgets (modals, dropdowns) are fully keyboard operable (e.g., using Escape to close). Implement a 'skip to main content' link.",
+            "status": "pending",
+            "testStrategy": "Disconnect the mouse and navigate the entire application using only the Tab, Shift+Tab, Enter, Space, and arrow keys. Confirm that every interactive element can be reached and activated, and that focus is always clearly visible and never lost."
+          },
+          {
+            "id": 4,
+            "title": "Enhance Screen Reader Support with ARIA and Alt Text",
+            "description": "Improve the experience for screen reader users by providing context through ARIA attributes for custom components and descriptive text for non-text content.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Audit all `<img>` tags and provide descriptive `alt` text for informative images and `alt=\"\"` for decorative ones. Implement `aria-live` regions for dynamic content like notifications and form error messages. Add appropriate ARIA roles (e.g., `role=\"dialog\"`) and states/properties (e.g., `aria-expanded`) to custom interactive components.",
+            "status": "pending",
+            "testStrategy": "Test key user flows using NVDA (on Windows) and VoiceOver (on macOS). Verify that images are described correctly, dynamic content changes are announced, and the purpose and state of custom controls are clearly communicated."
+          },
+          {
+            "id": 5,
+            "title": "Address Color Contrast, Motion, and Visual Information",
+            "description": "Ensure all visual information meets WCAG 2.1 AA contrast standards, is not conveyed by color alone, and respects user motion preferences.",
+            "dependencies": [
+              1
+            ],
+            "details": "Use a color contrast checker to audit and fix all instances of text that do not meet the 4.5:1 ratio (3:1 for large text). Review UI elements like charts and status indicators to ensure information is also conveyed through text or icons. Implement the `prefers-reduced-motion` media query to disable or reduce non-essential animations.",
+            "status": "pending",
+            "testStrategy": "Use browser extensions like axe or WAVE to systematically check color contrast. Use a color blindness simulator tool to verify that information conveyed by color is still understandable. Toggle the `prefers-reduced-motion` setting in the OS or browser to confirm animations are reduced."
+          }
+        ]
       },
       {
         "id": 19,
@@ -260,7 +1246,62 @@
           15
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Backend Global Exception Handling",
+            "description": "Establish the core error handling mechanism on the backend by creating a global exception handler using @ControllerAdvice and defining custom exception classes for specific business and technical errors.",
+            "dependencies": [],
+            "details": "Create a class annotated with @ControllerAdvice to centralize exception handling. Implement custom exception classes such as ResourceNotFoundException, ValidationException, and ExternalServiceException. Define @ExceptionHandler methods for these custom exceptions and common Spring exceptions. Ensure these handlers return a standardized JSON error response, including an appropriate HTTP status code and a user-friendly message. Configure the handler to sanitize sensitive error details in the production environment to prevent information leakage.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the @ControllerAdvice class, mocking controller methods that throw various exceptions to verify that the correct handler is invoked and the expected HTTP status and response body are returned. Create integration tests that trigger real error scenarios via API endpoints."
+          },
+          {
+            "id": 2,
+            "title": "Configure Structured Logging with SLF4J and Logback",
+            "description": "Set up a robust, structured logging framework for the backend to capture detailed, machine-readable log entries for easier parsing, searching, and analysis.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add SLF4J and Logback dependencies. Create a logback-spring.xml configuration file to define appenders and log formats. Use a JSON encoder (e.g., logstash-logback-encoder) to output logs in a structured JSON format. Implement a Spring MVC interceptor or filter to populate the Mapped Diagnostic Context (MDC) with contextual information like a unique request ID and authenticated user ID for every request. Configure log levels (INFO, WARN, ERROR) for different packages. Set up a rolling file appender with policies for log rotation and retention.",
+            "status": "pending",
+            "testStrategy": "During development, manually inspect console and file logs to verify they are in the correct JSON format and contain all required contextual fields (requestId, userId). Write a unit test to ensure the MDC interceptor correctly adds and clears contextual data before and after a request."
+          },
+          {
+            "id": 3,
+            "title": "Implement Frontend Error Handling and Reporting",
+            "description": "Develop a user-friendly error handling system in the React frontend that catches application errors, displays appropriate messages to the user, and reports critical issues to the backend for logging.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a React Error Boundary component to wrap the main application layout, which will catch JavaScript errors during rendering and display a generic fallback UI. Use try/catch blocks within async functions (e.g., API calls) to handle promise rejections and server errors. Create a dedicated backend endpoint (e.g., POST /api/v1/client-errors) that accepts error details from the frontend. Implement a frontend utility to send the error stack and component context to this endpoint. Ensure UI components display clear, non-technical error messages to the user based on API responses.",
+            "status": "pending",
+            "testStrategy": "Use React Testing Library to test that the Error Boundary renders its fallback UI when a child component throws an error. Use a mocking library like MSW (Mock Service Worker) or Jest's mocking capabilities to simulate API failures and verify that user-friendly error messages are displayed. Write an E2E test (e.g., with Cypress) to confirm that a caught frontend error triggers a network request to the backend reporting endpoint."
+          },
+          {
+            "id": 4,
+            "title": "Implement Health Checks and Basic Monitoring Metrics",
+            "description": "Expose application health endpoints and collect fundamental metrics to enable external monitoring and alerting on the application's operational status and performance.",
+            "dependencies": [
+              1
+            ],
+            "details": "Integrate the Spring Boot Actuator dependency. Enable and secure the /actuator/health and /actuator/prometheus endpoints. Create custom HealthIndicator beans to check the status of critical dependencies like the database, Kafka, and the Telegram API. Use Micrometer to create and register custom metrics, such as counters for specific business events or error types identified in the global exception handler. Ensure metrics like HTTP request counts, error rates, and latency are exposed via the Prometheus endpoint.",
+            "status": "pending",
+            "testStrategy": "Manually curl the /actuator/health endpoint to check the application's overall status and the status of its dependencies. Write integration tests for the custom HealthIndicators, mocking the dependent services to simulate both healthy and unhealthy states. Scrape the /actuator/prometheus endpoint to verify that custom metrics are present and correctly formatted."
+          },
+          {
+            "id": 5,
+            "title": "Implement Graceful Degradation with Circuit Breakers",
+            "description": "Protect the application from cascading failures caused by unresponsive or failing external services (e.g., Kafka, Telegram) by implementing the Circuit Breaker pattern.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add the Resilience4j dependency. Identify all service methods that make network calls to external dependencies. Annotate these methods with @CircuitBreaker, configuring properties like failureRateThreshold and waitDurationInOpenState in application.yml. For each protected method, implement a corresponding fallback method using the `fallbackMethod` attribute. This fallback should execute alternative logic, such as returning a default value, queuing the request for later, or logging a critical error without failing the entire user request. Ensure fallback executions are logged appropriately.",
+            "status": "pending",
+            "testStrategy": "Write integration tests where the external service client is mocked to throw exceptions. Verify that after a configured number of failures, the circuit breaker opens and subsequent calls immediately invoke the fallback method. Use Awaitility to test that the circuit breaker transitions back to half-open and then closed after the configured wait duration has passed and the external service becomes healthy again."
+          }
+        ]
       },
       {
         "id": 20,
@@ -275,7 +1316,64 @@
           19
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Backend Unit and Integration Tests",
+            "description": "Establish the testing framework for the backend, focusing on unit tests for services and controllers, and integration tests for API endpoints and database interactions.",
+            "dependencies": [],
+            "details": "Configure JUnit, Mockito, and MockMvc for the backend. Implement unit tests for critical service methods and utility classes. Write integration tests for all major API endpoints using MockMvc. Set up TestContainers to test database repository logic against a real database instance. Aim for an initial coverage target of 70% for core business logic.",
+            "status": "pending",
+            "testStrategy": "Backend unit and integration tests will be executed via the build tool. MockMvc will be used for API endpoint testing, and TestContainers for database layer testing, ensuring components work together correctly before full system deployment."
+          },
+          {
+            "id": 2,
+            "title": "Implement Frontend Unit and Component Interaction Tests",
+            "description": "Set up the frontend testing environment and write unit tests for individual React components, hooks, and utilities, as well as integration tests for component interactions.",
+            "dependencies": [],
+            "details": "Configure Jest and React Testing Library for the frontend project. Write unit tests for individual UI components, ensuring props and states are handled correctly. Test custom hooks and utility functions for expected behavior. Implement integration tests to verify interactions between related components, such as a form and its input fields.",
+            "status": "pending",
+            "testStrategy": "Frontend tests will run in a Node.js environment using Jest. React Testing Library will be used to render components and simulate user interactions in a virtual DOM, verifying component logic and behavior in isolation."
+          },
+          {
+            "id": 3,
+            "title": "Develop E2E Tests for Critical User Flows",
+            "description": "Implement end-to-end tests to simulate real user journeys through the application, ensuring critical paths function as expected from the UI to the database.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Choose and configure an E2E testing framework such as Cypress or Playwright. Script tests for critical user flows, including user registration, login/logout, subscription management, and core feature usage. Use realistic test data and scenarios to cover common and edge cases.",
+            "status": "pending",
+            "testStrategy": "E2E tests will run in a real browser, interacting with a deployed version of the application. The tests will validate complete user journeys, ensuring all parts of the system (frontend, backend, database) work together correctly."
+          },
+          {
+            "id": 4,
+            "title": "Conduct Performance and Security Testing",
+            "description": "Perform load testing on critical APIs and Kafka consumers, and run initial security and accessibility scans to identify common vulnerabilities.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Set up JMeter or k6 to create load testing scripts for high-traffic API endpoints. Measure and establish baseline response times under load. Test Kafka consumer performance by simulating high message volumes. Integrate and run OWASP dependency-check to scan for known vulnerabilities. Run automated accessibility tests using axe-core.",
+            "status": "pending",
+            "testStrategy": "Performance tests will simulate high user load against deployed endpoints. Security testing will involve static analysis of dependencies and automated scans. Accessibility tests will be integrated into the E2E test suite to catch violations during user flow simulations."
+          },
+          {
+            "id": 5,
+            "title": "Integrate All Tests into CI/CD Pipeline with Quality Gates",
+            "description": "Configure the CI/CD pipeline to automatically run all test suites on every pull request, enforce quality standards, and generate reports.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Modify the CI/CD configuration (e.g., GitHub Actions) to execute unit, integration, and E2E tests. Set up quality gates that fail the build if tests fail or if code coverage drops below a defined threshold. Configure the pipeline to generate and archive test coverage and execution reports. Add accessibility and security scans as automated steps. Document the testing strategy in the project README.",
+            "status": "pending",
+            "testStrategy": "The CI/CD pipeline will serve as the ultimate quality assurance gate. A successful pipeline run, which includes passing all automated tests (unit, integration, E2E, security, accessibility), will be a prerequisite for merging any code changes."
+          }
+        ]
       },
       {
         "id": 21,
@@ -288,7 +1386,56 @@
           20
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Project README.md",
+            "description": "Develop the main README.md file for the project repository, serving as the primary entry point for developers. It should cover the project's purpose, setup, and core workflows.",
+            "dependencies": [],
+            "details": "The README.md must include: a concise project overview and purpose; a list of the technology stack used; detailed, step-by-step local setup instructions; an outline of the development workflow including branching and PRs; a description of the testing approach and how to run tests; and high-level deployment instructions.",
+            "status": "pending",
+            "testStrategy": "Have a developer unfamiliar with the project attempt to set up the local environment using only the README.md. Verify that all instructions are clear, accurate, and all commands execute successfully."
+          },
+          {
+            "id": 2,
+            "title": "Generate and Refine API Documentation with Springdoc OpenAPI",
+            "description": "Implement and configure Springdoc OpenAPI to automatically generate interactive Swagger UI documentation. Annotate all REST controllers and DTOs to ensure the documentation is complete and accurate.",
+            "dependencies": [],
+            "details": "Integrate the springdoc-openapi dependency. Use annotations (@Operation, @ApiResponse, etc.) to document all endpoints, their parameters, and potential success/error responses. Define security schemes for authentication. Provide clear example request and response payloads for each endpoint. Ensure all error codes are documented.",
+            "status": "pending",
+            "testStrategy": "Access the generated Swagger UI endpoint. Manually execute each endpoint using the 'Try it out' feature to verify that the documented schemas, examples, and security requirements match the actual API behavior."
+          },
+          {
+            "id": 3,
+            "title": "Write Comprehensive User Guide",
+            "description": "Create a detailed user guide for end-users, explaining how to use the application's features. The guide should be non-technical, easy to follow, and visually supported.",
+            "dependencies": [],
+            "details": "The guide should be structured by user workflow or feature area. It must include annotated screenshots and step-by-step instructions for all major functionalities. A dedicated troubleshooting or FAQ section should be included to address common user issues and questions.",
+            "status": "pending",
+            "testStrategy": "Have a non-technical user test the application by following the guide. Collect feedback on clarity, accuracy, and completeness. Ensure all screenshots and instructions are up-to-date with the latest UI."
+          },
+          {
+            "id": 4,
+            "title": "Create In-depth Developer Documentation",
+            "description": "Develop detailed technical documentation for developers, covering the internal architecture, design decisions, and key technical components of the application.",
+            "dependencies": [],
+            "details": "This documentation should include: architectural diagrams (e.g., C4, UML) explaining design decisions; documentation for major components and their interactions; an explanation of the state management approach; a database schema diagram with documented entity relationships; and documentation for the Kafka topic structure and message formats.",
+            "status": "pending",
+            "testStrategy": "Conduct a peer review of the documentation with the development team to ensure it accurately reflects the current codebase and architecture. Check for clarity, consistency, and technical accuracy."
+          },
+          {
+            "id": 5,
+            "title": "Document Deployment and Operations Procedures",
+            "description": "Create a comprehensive guide for deploying, configuring, and maintaining the application in a production environment, intended for DevOps or an operations team.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "The document must contain: a step-by-step production deployment process; a full list of environment variables and their configurations; discussion of scaling considerations; and instructions for monitoring application health, performance metrics, and logging. It should also include procedures for routine maintenance like backups and security patching.",
+            "status": "pending",
+            "testStrategy": "Perform a dry-run deployment to a staging environment, following the documentation precisely. Verify that all configuration, monitoring, and maintenance instructions are actionable and produce the expected results."
+          }
+        ]
       },
       {
         "id": 22,
@@ -301,7 +1448,62 @@
           20
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Production Docker Images and Environment Configuration",
+            "description": "Develop and configure production-ready Docker images for both frontend and backend services, and establish a secure method for managing environment variables and secrets.",
+            "dependencies": [],
+            "details": "Create a multi-stage Dockerfile for the frontend using Nginx for serving static assets. Create an optimized Dockerfile for the backend, including appropriate JVM settings for production performance. Implement environment variable handling for all services and set up a secrets management solution (e.g., Docker secrets, HashiCorp Vault, or cloud provider service) to avoid storing sensitive data in the repository. Create documented `.env.example` files.",
+            "status": "pending",
+            "testStrategy": "Build Docker images successfully. Run containers locally using example environment variables and ensure they start without errors. Verify that secrets are not present in the codebase and can be injected at runtime."
+          },
+          {
+            "id": 2,
+            "title": "Configure Docker Compose and Initial Database Schema Migration",
+            "description": "Create the production docker-compose.yml file to orchestrate all services and implement a database migration system to manage schema changes.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a `docker-compose.yml` file for production, defining services (frontend, backend, database), networks, and persistent volumes. Integrate a database migration tool like Flyway into the backend service's startup process. Create the initial database schema migration script (e.g., V1__initial_schema.sql) and document the process for creating and running new migrations.",
+            "status": "pending",
+            "testStrategy": "Run `docker-compose up` in a staging environment. Verify all services start and can communicate with each other over the defined network. Check the database to confirm that the initial schema has been applied correctly by the migration tool."
+          },
+          {
+            "id": 3,
+            "title": "Implement Service Health Checks and Scalability Foundations",
+            "description": "Ensure backend services are stateless, implement health check endpoints for monitoring, and configure database connection pooling for efficient resource management.",
+            "dependencies": [
+              2
+            ],
+            "details": "Refactor any stateful components in the backend services to ensure they are stateless, allowing for horizontal scaling. Implement `/health` (liveness) and `/ready` (readiness) endpoints in the backend service(s). Configure and optimize database connection pooling (e.g., HikariCP) within the backend application to handle production load.",
+            "status": "pending",
+            "testStrategy": "Test the health check endpoints to ensure they return a 200 OK status when the service is healthy and a non-200 status when it is not. Load test the backend to verify that connection pooling is working correctly and that multiple instances of the service can run concurrently without session-related issues."
+          },
+          {
+            "id": 4,
+            "title": "Configure Centralized Logging and Monitoring",
+            "description": "Set up a centralized logging system to aggregate logs from all services and configure basic metrics collection for performance monitoring.",
+            "dependencies": [
+              3
+            ],
+            "details": "Configure the Docker daemon or individual services (via logging drivers) to forward logs to a centralized logging solution like an ELK stack or a cloud-native service (e.g., AWS CloudWatch, Google Cloud Logging). Integrate a metrics library (e.g., Micrometer) into the backend service to expose key indicators like request latency, error rates, and JVM performance via a `/metrics` endpoint for Prometheus scraping.",
+            "status": "pending",
+            "testStrategy": "Deploy to a staging environment. Generate logs from frontend and backend services and verify they appear in the centralized logging platform with correct parsing. Query the `/metrics` endpoint and confirm that metrics are being exposed correctly and can be scraped by a monitoring tool."
+          },
+          {
+            "id": 5,
+            "title": "Implement Security Hardening and Finalize Scaling Configuration",
+            "description": "Secure the application by configuring HTTPS, CORS, rate limiting, and other security best practices. Finalize the configuration for horizontally scaling message consumers.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configure a reverse proxy (e.g., Nginx) to terminate SSL/TLS and enforce HTTPS using valid certificates. Implement secure headers (e.g., HSTS, X-Content-Type-Options). Configure Cross-Origin Resource Sharing (CORS) on the backend to allow requests only from authorized origins. Implement API rate limiting. Configure Kafka consumers to use a shared consumer group ID to enable horizontal scaling of message processing.",
+            "status": "pending",
+            "testStrategy": "Use security scanning tools like SSL Labs to verify HTTPS configuration. Test CORS by making requests from an unauthorized origin. Perform load tests to verify rate limiting is triggered as expected. Publish messages to a Kafka topic and confirm that they are processed in parallel by multiple scaled-up consumer instances."
+          }
+        ]
       },
       {
         "id": 23,
