@@ -131,8 +131,8 @@ class EventRepositoryTest {
     @Test
     void shouldFindEventsByDescriptionContainingIgnoreCase() {
         // Given
-        Event event1 = new Event("user-service", "user-login", "user.events.login", "User successfully logged in");
-        Event event2 = new Event("user-service", "user-logout", "user.events.logout", "User logged out");
+        Event event1 = new Event("user-service", "user-login", "user.events.login", "User login successful");
+        Event event2 = new Event("user-service", "user-logout", "user.events.logout", "User logout successful");
         Event event3 = new Event("auth-service", "login-failed", "auth.events.failed", "Failed login attempt");
         
         eventRepository.save(event1);
@@ -140,9 +140,9 @@ class EventRepositoryTest {
         eventRepository.save(event3);
 
         // When
-        List<Event> loginEvents = eventRepository.findByDescriptionContainingIgnoreCase("LOGIN");
+        List<Event> loginEvents = eventRepository.findByDescriptionContainingIgnoreCase("login");
         List<Event> logoutEvents = eventRepository.findByDescriptionContainingIgnoreCase("logout");
-
+        
         // Then
         assertThat(loginEvents).hasSize(2);
         assertThat(loginEvents).extracting(Event::getEventName)

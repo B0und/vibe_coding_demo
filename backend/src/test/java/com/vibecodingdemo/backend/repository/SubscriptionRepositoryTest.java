@@ -249,6 +249,11 @@ class SubscriptionRepositoryTest {
     void shouldWorkWithBidirectionalRelationships() {
         // Given
         Subscription subscription = new Subscription(user1, event1);
+        
+        // Use utility methods to establish bidirectional relationships
+        user1.addSubscription(subscription);
+        event1.addSubscription(subscription);
+        
         subscriptionRepository.save(subscription);
 
         // When - Load user and check subscriptions
