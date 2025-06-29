@@ -143,7 +143,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -151,7 +151,7 @@
             "description": "Create the core service logic for user management and JWT token operations. This includes user registration, user lookup, and the generation and validation of JWTs.",
             "dependencies": [],
             "details": "Create a `UserService` class that implements Spring's `UserDetailsService`. It should have a method for registering a new user by username, storing it in the database via the `UserRepository`. Create a separate `JwtUtil` class with methods to `generateToken(UserDetails userDetails)` and `validateToken(String token, UserDetails userDetails)`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for `UserService` to verify user registration and lookup. Write separate unit tests for `JwtUtil` to confirm correct token generation and validation logic."
           },
           {
@@ -162,7 +162,7 @@
               1
             ],
             "details": "Create a `JwtAuthenticationFilter` class that extends `OncePerRequestFilter`. In the `doFilterInternal` method, check for the 'Authorization: Bearer <token>' header. If the token is present and valid (using `JwtUtil`), load the user details (using `UserService`) and set the authentication in the `SecurityContextHolder`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the filter's logic using mock requests and mock `JwtUtil` and `UserService` to verify it correctly extracts the token, handles missing tokens, and sets the security context upon successful validation."
           },
           {
@@ -173,7 +173,7 @@
               2
             ],
             "details": "Create a `SecurityConfig` class annotated with `@Configuration` and `@EnableWebSecurity`. Configure the `HttpSecurity` bean to disable CSRF, set session creation policy to `STATELESS`, and define authorization rules. Permit all access to `/api/users/register` and require authentication for all other endpoints. Add the `JwtAuthenticationFilter` to the filter chain before the `UsernamePasswordAuthenticationFilter`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "This component is primarily tested through integration tests in a later subtask. Unit testing can be complex, but one could mock the `HttpSecurity` builder to verify that the correct methods are called."
           },
           {
@@ -184,7 +184,7 @@
               1
             ],
             "details": "Create a `UserController` class. Implement a `POST /api/users/register` endpoint that accepts a username, calls `userService.registerUser()`, generates a JWT using `JwtUtil`, and returns it. Implement a `GET /api/users/me` endpoint that retrieves the currently authenticated user from the `SecurityContext` and returns their details.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use `MockMvc` to write integration tests for the controller. Test the registration endpoint for successful user creation and token return. Test the `/me` endpoint in a later step once security is fully configured."
           },
           {
@@ -196,7 +196,7 @@
               4
             ],
             "details": "Using `@SpringBootTest` and `MockMvc`, write tests for the complete flow. Test 1: Call `POST /api/users/register` and verify a 2xx response and a valid JWT. Test 2: Use the token from Test 1 to call `GET /api/users/me` and verify a 200 OK response with the correct user data. Test 3: Call `GET /api/users/me` without a token or with an invalid token and verify a 401 Unauthorized or 403 Forbidden response.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "This subtask is entirely focused on testing. The test plan involves using `MockMvc` to simulate real HTTP requests and assert the responses, status codes, and body content to validate the full security configuration."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T15:54:36.027Z",
+      "updated": "2025-06-29T16:38:28.807Z",
       "description": "Tasks for master context"
     }
   }
