@@ -349,4 +349,108 @@ export const authApi = {
   logout(): void {
     localStorage.removeItem('authToken');
   }
+};
+
+// User Profile API functions
+export interface UserProfile {
+  id: string;
+  username: string;
+  role: 'USER' | 'ADMIN';
+  telegramRecipients?: string;
+  telegramChatId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateTelegramRecipientsRequest {
+  recipients: string;
+}
+
+export interface TelegramActivationCodeResponse {
+  activationCode: string;
+}
+
+export interface ActivateTelegramBotRequest {
+  code: string;
+  chatId: string;
+}
+
+export const userProfileApi = {
+  /**
+   * Get current user's profile information
+   * @returns Promise<UserProfile>
+   */
+  async getProfile(): Promise<UserProfile> {
+    return apiClient.get<UserProfile>('/api/users/me');
+  },
+
+  /**
+   * Update Telegram recipients for the current user
+   * @param recipients - Semicolon-separated list of Telegram recipients
+   * @returns Promise<{message: string}>
+   */
+  async updateTelegramRecipients(recipients: string): Promise<{message: string}> {
+    return apiClient.put<{message: string}>('/api/users/profile/telegram-recipients', {
+      recipients
+    });
+  },
+
+  /**
+   * Generate a Telegram activation code for bot setup
+   * @returns Promise<TelegramActivationCodeResponse>
+   */
+  async generateTelegramActivationCode(): Promise<TelegramActivationCodeResponse> {
+    return apiClient.post<TelegramActivationCodeResponse>('/api/users/profile/telegram-activation-code');
+  },
+
+  /**
+   * Activate Telegram bot with code and chat ID
+   * @param code - 6-digit activation code
+   * @param chatId - Telegram chat ID
+   * @returns Promise<{message: string}>
+   */
+  async activateTelegramBot(code: string, chatId: string): Promise<{message: string}> {
+    return apiClient.post<{message: string}>('/api/users/telegram-activate', {
+      code,
+      chatId
+    });
+  }
+};
+
+// Event Management API functions for Admin Panel
+export interface EventInput {
+  systemName: string;
+  eventName: string;
+  kafkaTopic: string;
+  description: string;
+}
+
+export const eventManagementApi = {
+  /**
+   * Create a new event
+   * @param event - Event data to create
+   * @returns Promise<Event>
+   */
+  async createEvent(event: EventInput): Promise<Event> {
+    return apiClient.post<Event>('/api/events', event);
+  },
+
+  /**
+   * Update an existing event
+   * @param id - Event ID to update
+   * @param event - Updated event data
+   * @returns Promise<Event>
+   */
+  async updateEvent(id: number, event: EventInput): Promise<Event> {
+    return apiClient.put<Event>(`/api/events/${id}`, event);
+  },
+
+  /**
+   * Delete an event
+   * @param id - Event ID to delete
+   * @returns Promise<void>
+   */
+  async deleteEvent(id: number): Promise<void> {
+    return apiClient.delete<void>(`/api/events/${id}`);
+  }
 }; 

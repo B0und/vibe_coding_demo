@@ -688,7 +688,7 @@
           4,
           10
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -696,7 +696,7 @@
             "description": "Set up the basic routing for the user profile page and create the main `Profile` component. This component will serve as the container for all other features and should be structured with placeholders for the user info, recipients, and bot activation sections, adhering to the Nova design system for layout.",
             "dependencies": [],
             "details": "Create a new route for `/profile`. Implement the main `Profile.tsx` component. Inside, define three distinct sections using Nova components (e.g., Card, Stack, Heading). The first section should display the user's username (can be static/mocked for now). The other two sections will house the components from subtasks 3 and 4.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that navigating to the `/profile` route renders the new page. Use visual snapshot testing or manual inspection to confirm the page layout, including the three main sections, conforms to the Nova design system specifications."
           },
           {
@@ -705,7 +705,7 @@
             "description": "Create and configure the API client functions required for the profile page to communicate with the backend. This includes functions for updating Telegram recipients and generating a bot activation code.",
             "dependencies": [],
             "details": "In the designated API client module, implement and export two asynchronous functions: `updateTelegramRecipients(recipients: string): Promise<void>` which will send a PUT/POST request to the user's endpoint, and `generateActivationCode(): Promise<{ code: string }>` which will call the endpoint to get a new one-time code. Ensure they handle request/response logic correctly.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for both API client functions. Use a mocking library (like `msw` or `jest.mock`) to simulate API responses and verify that the functions make requests to the correct endpoints with the expected payloads and correctly handle both successful and error responses."
           },
           {
@@ -717,7 +717,7 @@
               2
             ],
             "details": "Create a `TelegramRecipientsForm` component. It should contain a text field for semicolon-separated usernames and a 'Save' button. Implement client-side validation to check for the correct format. On 'Save', the component should call the `updateTelegramRecipients` API function with the field's value.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write component tests to verify the validation logic for the input field. Create an integration test where you input data, click 'Save', and assert that the `updateTelegramRecipients` API function is called with the correct arguments."
           },
           {
@@ -729,7 +729,7 @@
               2
             ],
             "details": "Create a `BotActivation` component. Include a button to trigger the `generateActivationCode` API call. Upon receiving the code, display it clearly along with the instructional text: '1. Find our bot in Telegram: @YourNotifierBotName. 2. Send it the message: /start <code>.'. Also, fetch and display the user's current activation status (e.g., a 'Status: Active' badge) when the component loads.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write an integration test to confirm that clicking the 'Generate Code' button calls the API and displays the returned code and instructions. Manually verify that the activation status indicator correctly reflects the user's data upon page load."
           },
           {
@@ -741,7 +741,7 @@
               4
             ],
             "details": "For the recipients form, disable the 'Save' button and show a loading indicator while the update request is in flight. Display a toast or inline message for success or error outcomes. For the bot activation, disable the 'Generate Code' button and show a loader during the API call, and display an error message if the code generation fails. Ensure all states follow Nova design system patterns for notifications and loaders.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use Storybook or a similar tool to create stories for each component's various states (idle, loading, success, error). Manually test the end-to-end flows by mocking API responses with delays or errors to ensure the UI updates correctly and provides the intended feedback."
           }
         ]
@@ -826,7 +826,7 @@
           5,
           10
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -834,7 +834,7 @@
             "description": "Create the API client functions for event CRUD operations and configure React Query for data fetching, caching, and state management.",
             "dependencies": [],
             "details": "Implement the API client functions: `getEvents`, `createEvent(event)`, `updateEvent(id, event)`, and `deleteEvent(id)`. Set up React Query client and create custom hooks (`useEvents`, `useCreateEvent`, `useUpdateEvent`, `useDeleteEvent`) to encapsulate API calls and manage server state, including invalidation logic for automatic UI updates.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the API client functions with mock API responses. Test the custom React Query hooks to ensure they correctly handle loading, success, and error states."
           },
           {
@@ -845,7 +845,7 @@
               1
             ],
             "details": "Create the `AdminPanel` component. Use the `useEvents` hook to fetch and display data. The table, built with Nova components, must include columns for 'System name', 'Event name', 'Kafka topic', 'Description', and an 'Actions' column. Implement loading and error state UI based on the React Query hook's status.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Component tests to verify the table renders correctly with mock data, including loading and error states. Visual regression testing against Nova design system specifications to ensure compliance."
           },
           {
@@ -856,7 +856,7 @@
               1
             ],
             "details": "Create a reusable `EventForm` component with validated fields for system name, event name, Kafka topic, and description. On the `AdminPanel`, add an 'Add Event' button that opens a Nova modal containing this form. Form submission should trigger the `useCreateEvent` mutation. On success, the modal should close and the event table should refresh.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the form component's validation logic. Component test the modal interaction and form submission. End-to-end test the flow: click 'Add Event', fill form, submit, and verify the new event appears in the table."
           },
           {
@@ -868,7 +868,7 @@
               3
             ],
             "details": "Add an 'Edit' button to the 'Actions' column for each table row. Clicking it should open the `EventForm` modal, populated with the data of the corresponding event. The form's submit handler must call the `useUpdateEvent` mutation. On successful update, the table should reflect the changes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "End-to-end test: click 'Edit', verify form is pre-filled, change a value, submit, and confirm the table is updated. Component test to ensure the form is correctly populated with initial data when in edit mode."
           },
           {
@@ -880,7 +880,7 @@
               2
             ],
             "details": "Add a 'Delete' button to the 'Actions' column for each table row. Clicking this button must open a Nova confirmation dialog. If the user confirms, call the `useDeleteEvent` mutation with the event's ID. Upon successful deletion, the event list should automatically refresh.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "End-to-end test: click 'Delete', confirm the action in the dialog, and verify the event is removed from the table. Component test the confirmation dialog's cancel and confirm behaviors."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T19:44:31.305Z",
+      "updated": "2025-06-29T19:56:26.732Z",
       "description": "Tasks for master context"
     }
   }
