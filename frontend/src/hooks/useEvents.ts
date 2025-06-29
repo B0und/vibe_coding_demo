@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient, eventManagementApi, type EventInput } from '../api/client';
+import { useIsAuthenticated } from './useAuth';
 import type { Event } from '../types';
 
 // Query keys for React Query cache management
@@ -16,10 +17,13 @@ export const eventQueryKeys = {
  * @returns React Query result with events data
  */
 export function useEvents() {
+  const { isAuthenticated } = useIsAuthenticated();
+  
   return useQuery({
     queryKey: eventQueryKeys.list(),
     queryFn: () => apiClient.getEvents(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 }
 
@@ -110,10 +114,12 @@ export function useDeleteEvent() {
  * @returns React Query result with event data
  */
 export function useEvent(id: number) {
+  const { isAuthenticated } = useIsAuthenticated();
+  
   return useQuery({
     queryKey: eventQueryKeys.detail(id),
     queryFn: () => apiClient.get<Event>(`/api/events/${id}`),
-    enabled: !!id,
+    enabled: !!id && isAuthenticated, // Only fetch when authenticated and ID exists
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 } 

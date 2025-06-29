@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { useError } from '../contexts/ErrorContext';
+import { useIsAuthenticated } from './useAuth';
 import type { Event, Subscription, EventWithSubscription } from '../types';
 
 // Query keys for React Query
@@ -16,10 +17,13 @@ export const subscriptionKeys = {
  * Hook to fetch all available events
  */
 export function useEvents() {
+  const { isAuthenticated } = useIsAuthenticated();
+  
   return useQuery({
     queryKey: subscriptionKeys.events,
     queryFn: () => apiClient.getEvents(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 }
 
@@ -27,10 +31,13 @@ export function useEvents() {
  * Hook to fetch current user's subscriptions
  */
 export function useUserSubscriptions() {
+  const { isAuthenticated } = useIsAuthenticated();
+  
   return useQuery({
     queryKey: subscriptionKeys.userSubscriptions,
     queryFn: () => apiClient.getUserSubscriptions(),
     staleTime: 1 * 60 * 1000, // 1 minute
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 }
 
@@ -76,10 +83,12 @@ export function useSubscriptionData() {
  * Hook to check subscription status for a specific event
  */
 export function useSubscriptionStatus(eventId: number) {
+  const { isAuthenticated } = useIsAuthenticated();
+  
   return useQuery({
     queryKey: subscriptionKeys.subscriptionStatus(eventId),
     queryFn: () => apiClient.getSubscriptionStatus(eventId),
-    enabled: !!eventId,
+    enabled: !!eventId && isAuthenticated, // Only fetch when authenticated and eventId exists
     staleTime: 30 * 1000, // 30 seconds
   });
 }
