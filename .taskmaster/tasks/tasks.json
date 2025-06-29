@@ -1516,7 +1516,64 @@
           8
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Docker Compose for Local Kafka Environment",
+            "description": "Create a `docker-compose.yml` file to orchestrate a local Kafka and Zookeeper cluster. This foundational step enables a consistent and isolated testing environment for all subsequent utilities.",
+            "dependencies": [],
+            "details": "The `docker-compose.yml` must define services for Zookeeper and a Kafka broker. Configure necessary environment variables, such as `KAFKA_ADVERTISED_LISTENERS` and `KAFKA_ZOOKEEPER_CONNECT`, to ensure proper communication between services and accessibility from the host machine. Expose the Kafka broker port (e.g., 9092) for client connections.",
+            "status": "pending",
+            "testStrategy": "Run `docker-compose up -d` and verify that both Zookeeper and Kafka containers start successfully without errors. Use a command-line tool like `kafkacat` or `nc` from the host to confirm a successful connection to the exposed Kafka port."
+          },
+          {
+            "id": 2,
+            "title": "Implement Script for Automated Test Topic Creation",
+            "description": "Develop a shell script or a lightweight application (e.g., Java, Python) to automatically create a predefined set of Kafka topics required for testing.",
+            "dependencies": [
+              1
+            ],
+            "details": "The script must connect to the Kafka instance running via Docker Compose. It should be configurable to create topics with specified names, partition counts, and a replication factor (typically 1 for a single-broker local setup). Document the command to execute the script within the project's README.",
+            "status": "pending",
+            "testStrategy": "After starting the Docker environment, execute the topic creation script. Then, use the `kafka-topics.sh` utility (e.g., by exec-ing into the Kafka container) to list all topics and verify that the test topics have been created with the correct configuration."
+          },
+          {
+            "id": 3,
+            "title": "Develop a CLI Message Producer Utility",
+            "description": "Create a command-line interface (CLI) tool for sending JSON messages to specific Kafka topics. This utility will be used to simulate events and populate topics with test data.",
+            "dependencies": [
+              2
+            ],
+            "details": "The CLI tool should accept the topic name and the message content as arguments. The message content can be provided as a JSON string directly or read from a file. Implement a feature to use predefined JSON message templates for common event types to streamline testing workflows.",
+            "status": "pending",
+            "testStrategy": "Use the CLI tool to send a test message to a topic created in the previous step. Use a standard Kafka consumer tool (`kafka-console-consumer.sh`) to read from the topic and verify that the message was produced correctly and its content matches the input."
+          },
+          {
+            "id": 4,
+            "title": "Build a CLI Message Consumer Utility",
+            "description": "Implement a simple command-line consumer tool that subscribes to Kafka topics and displays the messages in a human-readable format.",
+            "dependencies": [
+              3
+            ],
+            "details": "The consumer tool should take a topic name as an argument. It should connect to the Kafka broker and print consumed messages to the console. JSON messages should be pretty-printed for readability. Include an optional flag to perform basic content filtering (e.g., string matching) on the message payload.",
+            "status": "pending",
+            "testStrategy": "Start the consumer CLI listening on a specific topic. Use the producer CLI (from subtask 3) to send several distinct messages. Verify that the consumer prints all messages correctly. Test the content filtering feature by sending multiple messages and ensuring only the matching ones are displayed."
+          },
+          {
+            "id": 5,
+            "title": "Create Comprehensive Documentation and README Update",
+            "description": "Write and finalize all documentation, consolidating the usage instructions for the Docker environment, topic creator, producer, and consumer utilities into the main project README.md.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "The documentation must include: 1. Prerequisites (e.g., Docker). 2. Step-by-step instructions for starting the environment with `docker-compose`. 3. Clear command examples for creating topics, producing messages (with and without templates), and consuming messages (with and without filtering). 4. A brief troubleshooting section for common issues like connection failures.",
+            "status": "pending",
+            "testStrategy": "Ask a team member unfamiliar with the utilities to follow the README documentation from start to finish. They should be able to successfully set up the environment, create a topic, produce a message, and consume it without any external assistance. All documented commands must be verified to work as described."
+          }
+        ]
       },
       {
         "id": 24,
@@ -1531,7 +1588,60 @@
           19
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Core Authentication and Authorization",
+            "description": "Establish the foundational user authentication and role-based access control (RBAC) systems to secure user access.",
+            "dependencies": [],
+            "details": "Implement a token-based authentication system (e.g., JWT). Configure secure cookie settings (HttpOnly, SameSite=Strict, Secure). Implement token expiration with a refresh token mechanism. Add rate limiting specifically for authentication endpoints (e.g., /login, /refresh). For authorization, implement RBAC for admin-only features and ensure all sensitive operations verify user permissions. Implement object-level security to ensure users can only access and modify their own data.",
+            "status": "pending",
+            "testStrategy": "Unit test token generation, validation, and expiration logic. Integration test the full login/logout/refresh flow. Write access control tests to verify that non-admin users receive a 403 Forbidden error on admin routes and that users cannot access data belonging to other users."
+          },
+          {
+            "id": 2,
+            "title": "Secure Application against Injection and XSS Attacks",
+            "description": "Protect the application from common data-related vulnerabilities like SQL Injection and Cross-Site Scripting (XSS) by validating inputs and sanitizing outputs.",
+            "dependencies": [],
+            "details": "Implement strict, schema-based input validation for all user-provided data, including API request bodies, URL parameters, and headers. Use parameterized queries or a trusted ORM for all database interactions to prevent SQL injection. Implement context-aware output encoding to mitigate stored and reflected XSS vulnerabilities. Configure a strict Content Security Policy (CSP) to limit the sources of executable scripts and other resources.",
+            "status": "pending",
+            "testStrategy": "Use a security scanner (DAST tool) to probe for injection vulnerabilities. Manually attempt to submit malicious payloads (e.g., `<script>alert('XSS')</script>`, `' OR 1=1;--`) in all input fields. Write unit tests for validation logic. Use browser developer tools to verify the CSP is active and blocking unauthorized resources."
+          },
+          {
+            "id": 3,
+            "title": "Harden API Endpoints and HTTP Communications",
+            "description": "Strengthen API security by implementing CSRF protection, secure headers, and general rate limiting.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement CSRF protection for all state-changing requests initiated from a browser context (e.g., using the double-submit cookie pattern). Configure essential security headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security` (HSTS). Implement a global rate-limiting policy for all API endpoints to prevent denial-of-service and brute-force attacks. Ensure all API request payloads are validated against a predefined schema.",
+            "status": "pending",
+            "testStrategy": "Verify in a staging environment using a tool like securityheaders.com that all required headers are present and correctly configured. Use a load testing tool (e.g., k6, JMeter) to confirm that rate limiting triggers correctly after the configured threshold. Manually test forms to ensure requests fail without a valid CSRF token."
+          },
+          {
+            "id": 4,
+            "title": "Implement Secure Configuration and Dependency Management",
+            "description": "Secure the application's runtime environment by managing secrets properly and ensuring all third-party dependencies are free from known vulnerabilities.",
+            "dependencies": [],
+            "details": "Remove all secrets (API keys, database passwords, signing keys) from source code and environment variables. Integrate a secure secrets management solution like HashiCorp Vault or AWS Secrets Manager. Set up a dependency scanning tool (e.g., OWASP Dependency-Check, Snyk) in the CI/CD pipeline to fail builds with critical vulnerabilities. Configure Dependabot or a similar tool for automated dependency updates. Ensure debug modes and verbose error messages are disabled in the production environment.",
+            "status": "pending",
+            "testStrategy": "Audit the CI/CD pipeline to confirm the dependency scan step is present and functional. Manually inspect the production deployment configuration to verify debug mode is off. Perform a code review to ensure no secrets are hardcoded. Test the application's ability to fetch secrets from the configured secret manager at startup."
+          },
+          {
+            "id": 5,
+            "title": "Conduct Final Security Review and Documentation",
+            "description": "Perform a comprehensive audit of all implemented security measures and create detailed documentation for future reference and compliance.",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Create a security documentation package that details the authentication flow, authorization matrix (roles and permissions), data validation strategies, and secure configuration setup. Conduct a thorough, manual security review and penetration test against a production-like staging environment. Use the OWASP Top 10 as a checklist to validate that all relevant risks have been mitigated. Document any accepted risks and create follow-up tasks for them.",
+            "status": "pending",
+            "testStrategy": "The task itself is a test strategy. The review should be conducted by a team member (or external party) not directly involved in the implementation. The outcome should be a signed-off review document confirming the application is ready for deployment from a security perspective."
+          }
+        ]
       },
       {
         "id": 25,
@@ -1548,7 +1658,62 @@
           24
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Component Integration Verification",
+            "description": "Verify the technical integration points between all system components, including frontend-backend, Kafka, Telegram, and the database, to ensure they communicate correctly.",
+            "dependencies": [],
+            "details": "Test API contracts between the frontend and backend services. Validate that messages are successfully produced to and consumed from Kafka topics. Confirm the Telegram bot integration can send and receive messages as expected. Verify all database interactions (reads, writes, updates) function correctly and maintain data integrity.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "End-to-End User Flow Validation",
+            "description": "Test the complete application flow from a user's perspective to ensure all user stories from the Product Requirements Document (PRD) are implemented and functioning correctly.",
+            "dependencies": [
+              1
+            ],
+            "details": "Execute test cases that cover the entire user journey, such as creating an event, triggering the notification logic, and confirming the final notification delivery. Use realistic data and scenarios to validate the implementation against the specified user stories and business logic.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Performance and Scalability Assessment",
+            "description": "Evaluate system performance under load to validate latency, throughput, and scalability, ensuring it meets the defined non-functional requirements.",
+            "dependencies": [
+              2
+            ],
+            "details": "Conduct load testing to confirm that notification latency is consistently below the 2-second requirement. Stress test the system with high message volumes to identify potential bottlenecks and verify its ability to scale. Measure and document API response times under various loads to guide optimization efforts.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Usability Testing and Feedback Collection",
+            "description": "Engage representative users to test the application's usability and gather qualitative feedback on the overall user experience.",
+            "dependencies": [
+              2
+            ],
+            "details": "Organize and conduct user testing sessions where participants perform key tasks within the application. Collect feedback through observation, think-aloud protocols, and post-session surveys. Analyze the findings to identify usability issues and areas for improvement, and create a report for potential adjustments.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Final Regression and Documentation Review",
+            "description": "Execute a full regression suite to ensure no existing functionality has been broken by final changes, and review all documentation for accuracy and completeness before release.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Run the complete automated test suite and perform manual checks on critical user paths to verify system stability. Simultaneously, review the project README for setup accuracy, validate that API documentation (e.g., Swagger) matches the implementation, and ensure all other technical documents are current.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
