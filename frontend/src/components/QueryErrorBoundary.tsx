@@ -123,11 +123,17 @@ export function QueryErrorBoundary({
             console.error("QueryErrorBoundary caught an error:", error);
 
             // Report the error with full context
-            errorReporter.reportReactError(error, errorInfo, {
-              component: "QueryErrorBoundary",
-              errorBoundary: true,
-              hasCustomFallback: !!fallback,
-            });
+            errorReporter.reportReactError(
+              error,
+              {
+                componentStack: errorInfo.componentStack || undefined,
+              },
+              {
+                component: "QueryErrorBoundary",
+                errorBoundary: true,
+                hasCustomFallback: !!fallback,
+              }
+            );
           }}
         >
           {children}

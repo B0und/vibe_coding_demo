@@ -137,7 +137,7 @@ export function useSubscriptionMutations() {
       // Return a context object with the snapshotted value
       return { previousSubscriptions, previousEvents };
     },
-    onSuccess: (data, eventId) => {
+    onSuccess: (_, eventId) => {
       // Remove from loading state
       setLoadingEventIds(prev => {
         const newSet = new Set(prev);
@@ -190,7 +190,7 @@ export function useSubscriptionMutations() {
       // Return a context object with the snapshotted value
       return { previousSubscriptions };
     },
-    onSuccess: (data, eventId) => {
+    onSuccess: (_, eventId) => {
       // Remove from loading state
       setLoadingEventIds(prev => {
         const newSet = new Set(prev);

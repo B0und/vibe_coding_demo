@@ -300,7 +300,8 @@ export interface LoginResponse {
     username: string;
     createdAt: string;
   };
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface AuthUser {
@@ -319,8 +320,8 @@ export const authApi = {
       });
       
       // Store the token in localStorage
-      if (response.token) {
-        localStorage.setItem('authToken', response.token);
+      if (response.accessToken) {
+        localStorage.setItem('authToken', response.accessToken);
       }
       
       return response;
