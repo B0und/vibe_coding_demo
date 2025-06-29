@@ -76,7 +76,10 @@ public class UserService implements UserDetailsService {
         UserBuilder builder = org.springframework.security.core.userdetails.User.withUsername(user.getUsername());
         // Since we don't have passwords in our MVP, we'll use a placeholder
         builder.password("{noop}"); // {noop} means no password encoder
-        builder.authorities("USER"); // Basic user role
+        
+        // Set authorities based on user role
+        String authority = user.getRole() == User.Role.ADMIN ? "ADMIN" : "USER";
+        builder.authorities(authority);
 
         return builder.build();
     }
@@ -168,5 +171,51 @@ public class UserService implements UserDetailsService {
 
         // Remove the used activation code from cache
         cache.evict(username);
+    }
+
+    /**
+     * Create an admin user
+     * @param username the username for the admin user
+     * @return the created admin user
+     * @throws IllegalArgumentException if username is null or empty, or if user already exists
+     */
+    public User createAdminUser(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+
+        // Check if user already exists
+        Optional<User> existingUser = userRepository.findByUsername(username.trim());
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("User already exists: " + username);
+        }
+
+        // Create new admin user
+        User user = new User(username.trim(), User.Role.ADMIN);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Promote a user to admin role
+     * @param username the username of the user to promote
+     * @throws IllegalArgumentException if user is not found
+     */
+    public void promoteToAdmin(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        
+        user.setRole(User.Role.ADMIN);
+        userRepository.save(user);
+    }
+
+    /**
+     * Check if a user has admin role
+     * @param username the username to check
+     * @return true if user is admin, false otherwise
+     */
+    public boolean isAdmin(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> user.getRole() == User.Role.ADMIN)
+                .orElse(false);
     }
 } 

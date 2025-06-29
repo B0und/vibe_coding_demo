@@ -19,6 +19,10 @@ public class User {
     @Column(unique = true, nullable = false)
     private String username;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role = Role.USER;
+    
     @Column(name = "telegram_recipients")
     private String telegramRecipients;
     
@@ -36,12 +40,24 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<Subscription> subscriptions = new HashSet<>();
     
+    // Role enum
+    public enum Role {
+        USER, ADMIN
+    }
+    
     // Default constructor
     public User() {}
     
     // Constructor with username
     public User(String username) {
         this.username = username;
+        this.role = Role.USER; // Default role
+    }
+    
+    // Constructor with username and role
+    public User(String username, Role role) {
+        this.username = username;
+        this.role = role;
     }
     
     // Getters and Setters
@@ -59,6 +75,14 @@ public class User {
     
     public void setUsername(String username) {
         this.username = username;
+    }
+    
+    public Role getRole() {
+        return role;
+    }
+    
+    public void setRole(Role role) {
+        this.role = role;
     }
     
     public String getTelegramRecipients() {
@@ -112,6 +136,15 @@ public class User {
         subscription.setUser(null);
     }
     
+    // Utility methods for role checking
+    public boolean isAdmin() {
+        return Role.ADMIN.equals(this.role);
+    }
+    
+    public boolean isUser() {
+        return Role.USER.equals(this.role);
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -130,6 +163,7 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", username='" + username + '\'' +
+                ", role=" + role +
                 ", telegramChatId='" + telegramChatId + '\'' +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +

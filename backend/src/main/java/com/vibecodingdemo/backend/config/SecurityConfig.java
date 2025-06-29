@@ -2,6 +2,7 @@ package com.vibecodingdemo.backend.config;
 
 import com.vibecodingdemo.backend.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -16,12 +17,22 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private String allowedOrigins;
+    
+    @Value("${cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS,PATCH}")
+    private String allowedMethods;
+    
+    @Value("${cors.max-age:3600}")
+    private Long maxAge;
 
     @Autowired
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
@@ -50,11 +61,17 @@ public class SecurityConfig {
                 // Allow public access to registration endpoint
                 .requestMatchers("/api/users/register").permitAll()
                 
+                // Allow public access to refresh token endpoint
+                .requestMatchers("/api/users/refresh").permitAll()
+                
                 // Allow public access to Telegram bot activation endpoint
                 .requestMatchers("/api/users/telegram-activate").permitAll()
                 
                 // Allow public access to health check endpoints (common in Spring Boot)
                 .requestMatchers("/actuator/health").permitAll()
+                
+                // Require ADMIN role for event management endpoints
+                .requestMatchers("/api/events/**").hasAuthority("ADMIN")
                 
                 // Require authentication for all other endpoints
                 .anyRequest().authenticated()
@@ -76,10 +93,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Allow requests from frontend development server
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*", "http://127.0.0.1:*"));
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
         
         // Allow common HTTP methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
         
         // Allow common headers
         configuration.setAllowedHeaders(Arrays.asList("*"));
@@ -88,7 +105,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         
         // Cache preflight response for 1 hour
-        configuration.setMaxAge(3600L);
+        configuration.setMaxAge(maxAge);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

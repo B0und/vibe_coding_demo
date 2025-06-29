@@ -1587,7 +1587,7 @@
           15,
           19
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1595,7 +1595,7 @@
             "description": "Establish the foundational user authentication and role-based access control (RBAC) systems to secure user access.",
             "dependencies": [],
             "details": "Implement a token-based authentication system (e.g., JWT). Configure secure cookie settings (HttpOnly, SameSite=Strict, Secure). Implement token expiration with a refresh token mechanism. Add rate limiting specifically for authentication endpoints (e.g., /login, /refresh). For authorization, implement RBAC for admin-only features and ensure all sensitive operations verify user permissions. Implement object-level security to ensure users can only access and modify their own data.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test token generation, validation, and expiration logic. Integration test the full login/logout/refresh flow. Write access control tests to verify that non-admin users receive a 403 Forbidden error on admin routes and that users cannot access data belonging to other users."
           },
           {
@@ -1604,7 +1604,7 @@
             "description": "Protect the application from common data-related vulnerabilities like SQL Injection and Cross-Site Scripting (XSS) by validating inputs and sanitizing outputs.",
             "dependencies": [],
             "details": "Implement strict, schema-based input validation for all user-provided data, including API request bodies, URL parameters, and headers. Use parameterized queries or a trusted ORM for all database interactions to prevent SQL injection. Implement context-aware output encoding to mitigate stored and reflected XSS vulnerabilities. Configure a strict Content Security Policy (CSP) to limit the sources of executable scripts and other resources.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Use a security scanner (DAST tool) to probe for injection vulnerabilities. Manually attempt to submit malicious payloads (e.g., `<script>alert('XSS')</script>`, `' OR 1=1;--`) in all input fields. Write unit tests for validation logic. Use browser developer tools to verify the CSP is active and blocking unauthorized resources."
           },
           {
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T19:20:14.682Z",
+      "updated": "2025-06-29T19:44:31.305Z",
       "description": "Tasks for master context"
     }
   }

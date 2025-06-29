@@ -1,13 +1,19 @@
 package com.vibecodingdemo.backend.controller;
 
 import com.vibecodingdemo.backend.entity.User;
+import com.vibecodingdemo.backend.security.SecurityUtils;
 import com.vibecodingdemo.backend.service.UserService;
 import com.vibecodingdemo.backend.util.JwtUtil;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,15 +26,17 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final SecurityUtils securityUtils;
 
     @Autowired
-    public UserController(UserService userService, JwtUtil jwtUtil) {
+    public UserController(UserService userService, JwtUtil jwtUtil, SecurityUtils securityUtils) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.securityUtils = securityUtils;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginUserRequest request) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginUserRequest request) {
         try {
             // Validate request
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -45,17 +53,21 @@ public class UserController {
 
             User user = userOpt.get();
 
-            // Generate JWT token
-            String token = jwtUtil.generateToken(user.getUsername());
+            // Generate JWT tokens
+            UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+            String accessToken = jwtUtil.generateToken(userDetails);
+            String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
             // Prepare response
             Map<String, Object> response = new HashMap<>();
             response.put("user", Map.of(
                 "id", user.getId(),
                 "username", user.getUsername(),
+                "role", user.getRole().toString(),
                 "createdAt", user.getCreatedAt()
             ));
-            response.put("token", token);
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
 
             return ResponseEntity.ok(response);
 
@@ -66,7 +78,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterUserRequest request) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterUserRequest request) {
         try {
             // Validate request
             if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
@@ -77,17 +89,21 @@ public class UserController {
             // Register the user
             User user = userService.registerUser(request.getUsername());
 
-            // Generate JWT token
-            String token = jwtUtil.generateToken(user.getUsername());
+            // Generate JWT tokens
+            UserDetails userDetails = userService.loadUserByUsername(user.getUsername());
+            String accessToken = jwtUtil.generateToken(userDetails);
+            String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
             // Prepare response
             Map<String, Object> response = new HashMap<>();
             response.put("user", Map.of(
                 "id", user.getId(),
                 "username", user.getUsername(),
+                "role", user.getRole().toString(),
                 "createdAt", user.getCreatedAt()
             ));
-            response.put("token", token);
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
 
             return ResponseEntity.ok(response);
 
@@ -100,23 +116,53 @@ public class UserController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        try {
+            // Validate request
+            if (request.getRefreshToken() == null || request.getRefreshToken().trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Refresh token is required"));
+            }
+
+            String refreshToken = request.getRefreshToken();
+
+            // Validate refresh token
+            if (!jwtUtil.validateToken(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Invalid or expired refresh token"));
+            }
+
+            // Extract username from refresh token
+            String username = jwtUtil.extractUsername(refreshToken);
+
+            // Load user details
+            UserDetails userDetails = userService.loadUserByUsername(username);
+
+            // Generate new access token
+            String newAccessToken = jwtUtil.generateToken(userDetails);
+
+            // Prepare response
+            Map<String, Object> response = new HashMap<>();
+            response.put("accessToken", newAccessToken);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401)
+                .body(Map.of("error", "Token refresh failed"));
+        }
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
-            // Get the currently authenticated user
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(401)
-                    .body(Map.of("error", "Not authenticated"));
-            }
-
-            String username = authentication.getName();
-            Optional<User> userOpt = userService.findByUsername(username);
+            // Get the currently authenticated user using SecurityUtils
+            Optional<User> userOpt = securityUtils.getCurrentUser();
             
             if (userOpt.isEmpty()) {
-                return ResponseEntity.status(404)
-                    .body(Map.of("error", "User not found"));
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Not authenticated"));
             }
 
             User user = userOpt.get();
@@ -125,6 +171,7 @@ public class UserController {
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("username", user.getUsername());
+            response.put("role", user.getRole().toString());
             response.put("createdAt", user.getCreatedAt());
             response.put("updatedAt", user.getUpdatedAt());
 
@@ -137,17 +184,17 @@ public class UserController {
     }
 
     @PutMapping("/profile/telegram-recipients")
-    public ResponseEntity<?> updateTelegramRecipients(@RequestBody UpdateTelegramRecipientsRequest request) {
+    public ResponseEntity<?> updateTelegramRecipients(@Valid @RequestBody UpdateTelegramRecipientsRequest request) {
         try {
-            // Get the currently authenticated user
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            // Get the currently authenticated user using SecurityUtils
+            Optional<String> usernameOpt = securityUtils.getCurrentUsername();
             
-            if (authentication == null || !authentication.isAuthenticated()) {
+            if (usernameOpt.isEmpty()) {
                 return ResponseEntity.status(401)
                     .body(Map.of("error", "Not authenticated"));
             }
 
-            String username = authentication.getName();
+            String username = usernameOpt.get();
             
             // Validate request
             if (request.getRecipients() == null) {
@@ -163,6 +210,9 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403)
+                .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Failed to update Telegram recipients"));
@@ -172,15 +222,15 @@ public class UserController {
     @PostMapping("/profile/telegram-activation-code")
     public ResponseEntity<?> generateTelegramActivationCode() {
         try {
-            // Get the currently authenticated user
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            // Get the currently authenticated user using SecurityUtils
+            Optional<String> usernameOpt = securityUtils.getCurrentUsername();
             
-            if (authentication == null || !authentication.isAuthenticated()) {
+            if (usernameOpt.isEmpty()) {
                 return ResponseEntity.status(401)
                     .body(Map.of("error", "Not authenticated"));
             }
 
-            String username = authentication.getName();
+            String username = usernameOpt.get();
             
             // Generate activation code
             String activationCode = userService.generateTelegramActivationCode(username);
@@ -190,6 +240,9 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403)
+                .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                 .body(Map.of("error", "Failed to generate activation code"));
@@ -197,7 +250,7 @@ public class UserController {
     }
 
     @PostMapping("/telegram-activate")
-    public ResponseEntity<?> activateTelegramBot(@RequestBody ActivateTelegramBotRequest request) {
+    public ResponseEntity<?> activateTelegramBot(@Valid @RequestBody ActivateTelegramBotRequest request) {
         try {
             // Validate request
             if (request.getCode() == null || request.getCode().trim().isEmpty()) {
@@ -224,8 +277,11 @@ public class UserController {
         }
     }
 
-    // DTO class for login request
+    // DTO class for user login request
     public static class LoginUserRequest {
+        @NotBlank(message = "Username is required")
+        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+        @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username can only contain letters, numbers, dots, underscores, and hyphens")
         private String username;
 
         public LoginUserRequest() {}
@@ -243,8 +299,11 @@ public class UserController {
         }
     }
 
-    // DTO class for registration request
+    // DTO class for user registration request
     public static class RegisterUserRequest {
+        @NotBlank(message = "Username is required")
+        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+        @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username can only contain letters, numbers, dots, underscores, and hyphens")
         private String username;
 
         public RegisterUserRequest() {}
@@ -264,6 +323,8 @@ public class UserController {
 
     // DTO class for updating Telegram recipients
     public static class UpdateTelegramRecipientsRequest {
+        @Size(max = 500, message = "Recipients list cannot exceed 500 characters")
+        @Pattern(regexp = "^[a-zA-Z0-9@._,;\\s-]*$", message = "Recipients can only contain letters, numbers, @, dots, commas, semicolons, spaces, underscores, and hyphens")
         private String recipients;
 
         public UpdateTelegramRecipientsRequest() {}
@@ -281,9 +342,14 @@ public class UserController {
         }
     }
 
-    // DTO class for Telegram bot activation
+    // DTO class for Telegram bot activation request
     public static class ActivateTelegramBotRequest {
+        @NotBlank(message = "Activation code is required")
+        @Pattern(regexp = "^[0-9]{6}$", message = "Activation code must be exactly 6 digits")
         private String code;
+        
+        @NotBlank(message = "Chat ID is required")
+        @Pattern(regexp = "^-?[0-9]+$", message = "Chat ID must be a valid number")
         private String chatId;
 
         public ActivateTelegramBotRequest() {}
@@ -307,6 +373,26 @@ public class UserController {
 
         public void setChatId(String chatId) {
             this.chatId = chatId;
+        }
+    }
+
+    // DTO class for refresh token request
+    public static class RefreshTokenRequest {
+        @NotBlank(message = "Refresh token is required")
+        private String refreshToken;
+
+        public RefreshTokenRequest() {}
+
+        public RefreshTokenRequest(String refreshToken) {
+            this.refreshToken = refreshToken;
+        }
+
+        public String getRefreshToken() {
+            return refreshToken;
+        }
+
+        public void setRefreshToken(String refreshToken) {
+            this.refreshToken = refreshToken;
         }
     }
 } 
