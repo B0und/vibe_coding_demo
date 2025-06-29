@@ -36,7 +36,7 @@ public class RateLimitingConfig implements WebMvcConfigurer {
             if (bucket.tryConsume(1)) {
                 return true;
             } else {
-                response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+                response.setStatus(429); // Too Many Requests
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\":\"Too many requests. Please try again later.\"}");
                 return false;

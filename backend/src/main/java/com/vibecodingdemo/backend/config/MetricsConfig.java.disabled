@@ -97,30 +97,30 @@ public class MetricsConfig {
     // Gauges for current state metrics
     @Bean
     public Gauge totalUsersGauge() {
-        return Gauge.builder("app.users.total")
+        return Gauge.builder("app.users.total", this, MetricsConfig::getTotalUsers)
                 .description("Total number of users")
-                .register(meterRegistry, this, MetricsConfig::getTotalUsers);
+                .register(meterRegistry);
     }
 
     @Bean
     public Gauge totalEventsGauge() {
-        return Gauge.builder("app.events.total")
+        return Gauge.builder("app.events.total", this, MetricsConfig::getTotalEvents)
                 .description("Total number of events")
-                .register(meterRegistry, this, MetricsConfig::getTotalEvents);
+                .register(meterRegistry);
     }
 
     @Bean
     public Gauge totalSubscriptionsGauge() {
-        return Gauge.builder("app.subscriptions.total")
+        return Gauge.builder("app.subscriptions.total", this, MetricsConfig::getTotalSubscriptions)
                 .description("Total number of active subscriptions")
-                .register(meterRegistry, this, MetricsConfig::getTotalSubscriptions);
+                .register(meterRegistry);
     }
 
     @Bean
     public Gauge activeUsersGauge() {
-        return Gauge.builder("app.users.active")
+        return Gauge.builder("app.users.active", this, MetricsConfig::getActiveUsers)
                 .description("Number of users with active subscriptions")
-                .register(meterRegistry, this, MetricsConfig::getActiveUsers);
+                .register(meterRegistry);
     }
 
     // Methods to get current values for gauges

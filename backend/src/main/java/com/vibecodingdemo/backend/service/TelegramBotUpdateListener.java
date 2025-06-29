@@ -23,6 +23,7 @@ public class TelegramBotUpdateListener extends TelegramLongPollingBot {
     
     public TelegramBotUpdateListener(TelegramBotService telegramBotService) {
         this.telegramBotService = telegramBotService;
+        logger.info("TelegramBotUpdateListener constructor called");
     }
     
     @Override

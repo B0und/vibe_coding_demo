@@ -95,7 +95,7 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             });
 
             // Register and start the container
-            endpointRegistry.registerListenerContainer(container, true);
+            endpointRegistry.registerListenerContainer(containerId, container);
             
             // Track the container
             topicToContainerIdMap.put(topic, containerId);

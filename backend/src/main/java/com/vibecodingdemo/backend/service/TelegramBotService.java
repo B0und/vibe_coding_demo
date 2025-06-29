@@ -40,6 +40,7 @@ public class TelegramBotService {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
         this.userService = userService;
+        logger.info("TelegramBotService constructor called");
     }
     
     /**

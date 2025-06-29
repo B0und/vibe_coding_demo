@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.vibecodingdemo.backend.config.MetricsConfig;
+
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -22,8 +22,7 @@ public class ErrorReportController {
 
     private static final Logger logger = LoggerFactory.getLogger(ErrorReportController.class);
     
-    @Autowired
-    private MetricsConfig metricsConfig;
+
 
     @PostMapping
     public ResponseEntity<Map<String, Object>> reportClientError(
@@ -36,11 +35,7 @@ public class ErrorReportController {
             String userAgent = request.getHeader("User-Agent");
             String ipAddress = getClientIpAddress(request);
             
-            // Increment metrics
-            metricsConfig.incrementClientErrors();
-            if (errorReport.isCritical()) {
-                metricsConfig.incrementCriticalClientErrors();
-            }
+            // TODO: Add metrics tracking when MetricsConfig is enabled
             
             // Log the client error with full context
             logger.error("CLIENT_ERROR reported | User: {} | IP: {} | UserAgent: {} | URL: {} | Message: {} | Stack: {} | Component: {} | Props: {}", 
