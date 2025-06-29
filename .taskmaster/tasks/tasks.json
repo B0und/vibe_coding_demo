@@ -414,7 +414,7 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -422,7 +422,7 @@
             "description": "Register the new bot with BotFather on Telegram to obtain the API token. Configure this token and the bot's username in the application's properties file.",
             "dependencies": [],
             "details": "Use the BotFather chat in Telegram to create a new bot and get its API token. Add the token and bot username to the Spring `application.properties` or `application.yml` file under keys like `telegram.bot.token` and `telegram.bot.username`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify that the application starts successfully and the configuration properties for the bot are loaded into the Spring Environment."
           },
           {
@@ -433,7 +433,7 @@
               1
             ],
             "details": "Create a `@Service` class named `TelegramBotService`. Inject the bot token from the configuration. Implement the `sendMessage(String chatId, String message)` method using a library like `telegrambots-spring-boot-starter` or a standard HTTP client to call the Telegram Bot API's `sendMessage` endpoint.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a unit test for `TelegramBotService` that mocks the API call. Manually test by invoking the service to send a test message to a known chat ID."
           },
           {
@@ -444,7 +444,7 @@
               2
             ],
             "details": "Implement a component that extends `TelegramLongPollingBot` or uses a webhook to receive updates. In the `onUpdateReceived` method, parse messages starting with `/start`. Extract the activation code and call a `UserService` method to validate the code and save the user's `chatId`. This logic should be encapsulated in the `handleStartCommand(String chatId, String text)` method within `TelegramBotService`.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the command parsing logic. Perform an integration test by sending a `/start <code>` message to the bot and verifying that the `UserService` is called correctly and the user's `chatId` is persisted in the database."
           },
           {
@@ -455,7 +455,7 @@
               2
             ],
             "details": "Create a private helper method within `TelegramBotService` to parse a JSON string. This method should build a formatted string with an emoji header (e.g., 🔔) and list each key-value pair on a new line. The `sendMessage` method should be updated to use this formatter if the input message is a valid JSON string.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the formatting method with various valid and malformed JSON strings. Test the `sendMessage` method to confirm it correctly sends formatted messages for JSON input and plain text for other strings."
           },
           {
@@ -466,7 +466,7 @@
               2
             ],
             "details": "Use Spring Retry (`@Retryable`, `@Backoff`) or a similar library to wrap the API call in the `sendMessage` method. Configure it for a set number of retries (e.g., 3) with an exponential backoff strategy (e.g., initial delay 1s, multiplier 2.0). Log each failed attempt. If all retries fail, log a final critical error.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test the retry logic by mocking the Telegram API client to throw transient exceptions and verify that the call is retried according to the backoff policy. Use WireMock in an integration test to simulate API failures and confirm the retry behavior."
           }
         ]
@@ -1718,7 +1718,7 @@
     ],
     "metadata": {
       "created": "2025-06-29T11:58:40.839Z",
-      "updated": "2025-06-29T16:52:19.991Z",
+      "updated": "2025-06-29T17:00:50.321Z",
       "description": "Tasks for master context"
     }
   }
