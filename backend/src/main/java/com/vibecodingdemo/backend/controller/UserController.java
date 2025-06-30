@@ -253,18 +253,23 @@ public class UserController {
     public ResponseEntity<?> activateTelegramBot(@Valid @RequestBody ActivateTelegramBotRequest request) {
         try {
             // Validate request
-            if (request.getCode() == null || request.getCode().trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Activation code is required"));
-            }
-            
             if (request.getChatId() == null || request.getChatId().trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Chat ID is required"));
             }
 
-            // Activate Telegram bot
-            userService.activateTelegramBot(request.getCode().trim(), request.getChatId().trim());
+            // Get the currently authenticated user
+            Optional<String> usernameOpt = securityUtils.getCurrentUsername();
+            
+            if (usernameOpt.isEmpty()) {
+                return ResponseEntity.status(401)
+                    .body(Map.of("error", "Not authenticated"));
+            }
+
+            String username = usernameOpt.get();
+            
+            // Directly activate the bot using username and chatId (bypass code system)
+            userService.activateTelegramBotDirect(username, request.getChatId().trim());
 
             return ResponseEntity.ok(Map.of("message", "Telegram bot activated successfully"));
 
@@ -344,27 +349,14 @@ public class UserController {
 
     // DTO class for Telegram bot activation request
     public static class ActivateTelegramBotRequest {
-        @NotBlank(message = "Activation code is required")
-        @Pattern(regexp = "^[0-9]{6}$", message = "Activation code must be exactly 6 digits")
-        private String code;
-        
         @NotBlank(message = "Chat ID is required")
         @Pattern(regexp = "^-?[0-9]+$", message = "Chat ID must be a valid number")
         private String chatId;
 
         public ActivateTelegramBotRequest() {}
 
-        public ActivateTelegramBotRequest(String code, String chatId) {
-            this.code = code;
+        public ActivateTelegramBotRequest(String chatId) {
             this.chatId = chatId;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public void setCode(String code) {
-            this.code = code;
         }
 
         public String getChatId() {

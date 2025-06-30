@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 export interface User {
   id: string;
   username: string;
+  role: 'USER' | 'ADMIN';
   createdAt: string;
   updatedAt?: string;
 }
@@ -29,6 +30,7 @@ export function useCurrentUser() {
         return {
           id: authUser.id,
           username: authUser.username,
+          role: authUser.role,
           createdAt: authUser.createdAt,
           updatedAt: authUser.updatedAt,
         };
@@ -57,6 +59,7 @@ export function useLogin() {
       return {
         id: response.user.id,
         username: response.user.username,
+        role: response.user.role,
         createdAt: response.user.createdAt,
       };
     },

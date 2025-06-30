@@ -300,6 +300,7 @@ export interface LoginResponse {
   user: {
     id: string;
     username: string;
+    role: 'USER' | 'ADMIN';
     createdAt: string;
   };
   accessToken: string;
@@ -375,7 +376,6 @@ export interface TelegramActivationCodeResponse {
 }
 
 export interface ActivateTelegramBotRequest {
-  code: string;
   chatId: string;
 }
 
@@ -396,7 +396,7 @@ export const userProfileApi = {
   async updateTelegramRecipients(recipients: string): Promise<{message: string}> {
     return apiClient.put<{message: string}>('/api/users/profile/telegram-recipients', {
       recipients
-    });
+    } as UpdateTelegramRecipientsRequest);
   },
 
   /**
@@ -408,16 +408,14 @@ export const userProfileApi = {
   },
 
   /**
-   * Activate Telegram bot with code and chat ID
-   * @param code - 6-digit activation code
+   * Activate Telegram bot with chat ID
    * @param chatId - Telegram chat ID
    * @returns Promise<{message: string}>
    */
-  async activateTelegramBot(code: string, chatId: string): Promise<{message: string}> {
+  async activateTelegramBot(chatId: string): Promise<{message: string}> {
     return apiClient.post<{message: string}>('/api/users/telegram-activate', {
-      code,
       chatId
-    });
+    } as ActivateTelegramBotRequest);
   }
 };
 
@@ -457,4 +455,18 @@ export const eventManagementApi = {
   async deleteEvent(id: number): Promise<void> {
     return apiClient.delete<void>(`/api/events/${id}`);
   }
+};
+
+// Debug API functions
+export const debugApi = {
+  getTelegramConfig: () => apiClient.get<any>('/api/debug/telegram-config'),
+  testNotification: () => apiClient.post<{
+    success: boolean;
+    message: string;
+    event?: string;
+    kafkaTopic?: string;
+    telegramChatId?: string;
+    error?: string;
+    flow?: string;
+  }>('/api/debug/test-notification'),
 }; 

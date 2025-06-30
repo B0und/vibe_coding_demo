@@ -174,6 +174,21 @@ public class UserService implements UserDetailsService {
     }
 
     /**
+     * Activate Telegram bot directly using username and chat ID (simplified flow)
+     * @param username the username of the user
+     * @param chatId the Telegram chat ID
+     * @throws IllegalArgumentException if user is not found
+     */
+    public void activateTelegramBotDirect(String username, String chatId) {
+        // Update user's Telegram chat ID directly
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        user.setTelegramChatId(chatId);
+        userRepository.save(user);
+    }
+
+    /**
      * Create an admin user
      * @param username the username for the admin user
      * @return the created admin user

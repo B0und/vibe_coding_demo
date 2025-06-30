@@ -98,60 +98,32 @@ public class TelegramBotService {
     }
     
     /**
-     * Handle the /start command with activation code
+     * Handle the /start command - show chat ID and simple activation instructions
      * @param chatId the chat ID of the user
-     * @param text the full command text (e.g., "/start 123456")
+     * @param text the full command text (e.g., "/start" or "/start 123456")
      */
     public void handleStartCommand(String chatId, String text) {
         try {
             logger.info("Handling start command from chat ID: {}", chatId);
             
-            // Parse the activation code from the command
-            String[] parts = text.trim().split("\\s+");
-            if (parts.length == 1 && "/start".equals(parts[0])) {
-                // No activation code provided, show help
-                sendMessage(chatId, 
-                    "👋 Welcome to VibeCodeDemo Bot!\n\n" +
-                    "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
-                    "To activate notifications:\n" +
-                    "1. Get your activation code from the web app\n" +
-                    "2. Send: <code>/start YOUR_CODE</code>\n\n" +
-                    "Need help? Use /help");
-                return;
-            }
-            
-            if (parts.length != 2 || !"/start".equals(parts[0])) {
-                sendMessage(chatId, 
-                    "❌ Invalid command format.\n\n" +
-                    "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
-                    "Please use: <code>/start YOUR_ACTIVATION_CODE</code>");
-                return;
-            }
-            
-            String activationCode = parts[1];
-            
-            // Validate and activate the bot
-            userService.activateTelegramBot(activationCode, chatId);
-            
-            // Send success message with chat ID confirmation
+            // Always show the welcome message with chat ID
             sendMessage(chatId, 
-                "✅ <b>Bot activated successfully!</b>\n\n" +
-                "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n" +
-                "🔔 You will now receive event notifications here.\n\n" +
-                "The bot is ready to send you updates!");
-            
-            logger.info("Bot activated successfully for chat ID: {}", chatId);
-            
-        } catch (IllegalArgumentException e) {
-            logger.warn("Activation failed for chat ID {}: {}", chatId, e.getMessage());
-            sendMessage(chatId, 
-                "❌ " + e.getMessage() + "\n\n" +
+                "👋 <b>Welcome to VibeCodeDemo Bot!</b>\n\n" +
                 "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
-                "Please check your activation code and try again.");
+                "📝 <b>To activate notifications:</b>\n" +
+                "1. Copy your Chat ID above: <code>" + chatId + "</code>\n" +
+                "2. Go to the web app Profile page\n" +
+                "3. Paste your Chat ID in the activation field\n" +
+                "4. Click 'Activate Bot'\n\n" +
+                "🔔 Once activated, you'll receive event notifications here!\n\n" +
+                "ℹ️ Need help? Use /help");
+            
+            logger.info("Start command handled successfully for chat ID: {}", chatId);
+            
         } catch (Exception e) {
             logger.error("Error handling start command for chat ID {}: {}", chatId, e.getMessage(), e);
             sendMessage(chatId, 
-                "❌ An error occurred while activating the bot.\n\n" +
+                "❌ An error occurred while processing your request.\n\n" +
                 "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
                 "Please try again or contact support.");
         }
@@ -197,10 +169,11 @@ public class TelegramBotService {
                 String key = entry.getKey();
                 JsonNode value = entry.getValue();
                 
-                sb.append(prefix).append("<b>").append(key).append(":</b> ");
+                // Use safe HTML formatting - don't create HTML tags from field names
+                sb.append(prefix).append("<b>").append(escapeHtml(key)).append(":</b> ");
                 
                 if (value.isValueNode()) {
-                    sb.append(value.asText()).append("\n");
+                    sb.append(escapeHtml(value.asText())).append("\n");
                 } else {
                     sb.append("\n");
                     formatJsonNode(value, sb, prefix + "  ");
@@ -211,13 +184,29 @@ public class TelegramBotService {
                 sb.append(prefix).append("• ");
                 JsonNode item = node.get(i);
                 if (item.isValueNode()) {
-                    sb.append(item.asText()).append("\n");
+                    sb.append(escapeHtml(item.asText())).append("\n");
                 } else {
                     sb.append("\n");
                     formatJsonNode(item, sb, prefix + "  ");
                 }
             }
         }
+    }
+    
+    /**
+     * Escape HTML characters to prevent issues with Telegram's HTML parser
+     * @param text the text to escape
+     * @return escaped text
+     */
+    private String escapeHtml(String text) {
+        if (text == null) {
+            return "";
+        }
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#x27;");
     }
     
     /**

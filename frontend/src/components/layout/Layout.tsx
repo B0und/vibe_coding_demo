@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from "react-router";
-import { useAuth } from "../../store/authStore";
+import { useAuth } from "../../hooks/useAuth";
 import { ThemeToggle } from "../ui";
 
 export default function Layout() {

@@ -71,6 +71,9 @@ public class SecurityConfig {
                 // Allow public access to health check endpoints (common in Spring Boot)
                 .requestMatchers("/actuator/health").permitAll()
                 
+                // Allow public access to debug endpoints for testing
+                .requestMatchers("/api/debug/**").permitAll()
+                
                 // Allow authenticated users to read events, require ADMIN for modifications
                 .requestMatchers(HttpMethod.GET, "/api/events/**").authenticated()
                 .requestMatchers("/api/events/**").hasAuthority("ADMIN")

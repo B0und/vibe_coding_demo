@@ -19,6 +19,8 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.MessageListener;
 import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -40,7 +42,7 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
     private final ObjectMapper objectMapper;
     
     // Keep track of active containers by topic
-    private final ConcurrentMap<String, String> topicToContainerIdMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentMessageListenerContainer<String, String>> topicToContainerMap = new ConcurrentHashMap<>();
 
     @Autowired
     public KafkaListenerServiceImpl(
@@ -64,21 +66,13 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             return false;
         }
 
-        String containerId = generateContainerId(topic);
-        
-        // Check if already listening to this topic
-        if (topicToContainerIdMap.containsKey(topic)) {
-            logger.info("Already listening to topic: {}", topic);
-            return false;
-        }
-
         try {
             // Create a new message listener container
             ConcurrentMessageListenerContainer<String, String> container = 
                 containerFactory.createContainer(topic);
             
             // Set the container ID for tracking
-            container.setBeanName(containerId);
+            container.setBeanName(generateContainerId(topic));
             
             // Set up the message listener
             container.setupMessageListener(new MessageListener<String, String>() {
@@ -94,13 +88,13 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
                 }
             });
 
-            // Register and start the container
-            endpointRegistry.registerListenerContainer(containerId, container);
+            // Start the container directly
+            container.start();
             
             // Track the container
-            topicToContainerIdMap.put(topic, containerId);
+            topicToContainerMap.put(topic, container);
             
-            logger.info("Successfully started listening to topic: {} with container ID: {}", topic, containerId);
+            logger.info("Successfully started listening to topic: {}", topic);
             return true;
             
         } catch (Exception e) {
@@ -116,29 +110,20 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             return false;
         }
 
-        String containerId = topicToContainerIdMap.get(topic);
-        if (containerId == null) {
+        ConcurrentMessageListenerContainer<String, String> container = topicToContainerMap.get(topic);
+        if (container == null) {
             logger.info("Not currently listening to topic: {}", topic);
             return false;
         }
 
         try {
-            // Get the container from the registry
-            var container = endpointRegistry.getListenerContainer(containerId);
-            if (container != null) {
-                // Stop the container
-                container.stop();
-                
-                // Unregister the container
-                endpointRegistry.unregisterListenerContainer(containerId);
-                
-                logger.info("Successfully stopped listening to topic: {} (container ID: {})", topic, containerId);
-            } else {
-                logger.warn("Container not found in registry for topic: {} (container ID: {})", topic, containerId);
-            }
+            // Stop the container
+            container.stop();
+            
+            logger.info("Successfully stopped listening to topic: {}", topic);
             
             // Remove from tracking map
-            topicToContainerIdMap.remove(topic);
+            topicToContainerMap.remove(topic);
             return true;
             
         } catch (Exception e) {
@@ -148,6 +133,7 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void processMessage(String topic, String message) {
         logger.info("Processing message from topic '{}': {}", topic, message);
         
@@ -166,8 +152,8 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             Event event = eventOpt.get();
             logger.debug("Found event: {} for topic: {}", event.getId(), topic);
             
-            // 3. Find all subscribed users for this event
-            List<Subscription> subscriptions = subscriptionRepository.findByEventId(event.getId());
+            // 3. Find all subscribed users for this event (with users eagerly fetched)
+            List<Subscription> subscriptions = subscriptionRepository.findByEventIdWithUsers(event.getId());
             if (subscriptions.isEmpty()) {
                 logger.info("No subscribers found for event '{}' (topic: {}). Skipping notifications.", 
                     event.getEventName(), topic);
@@ -186,6 +172,15 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             
             for (Subscription subscription : subscriptions) {
                 User user = subscription.getUser();
+                
+                // Force loading of User properties within transaction to avoid lazy loading issues
+                String username = user.getUsername();
+                String telegramChatId = user.getTelegramChatId();
+                String telegramRecipients = user.getTelegramRecipients();
+                
+                logger.debug("Processing notification for user: {} (chatId: {}, recipients: {})", 
+                    username, telegramChatId, telegramRecipients);
+                
                 boolean notificationSent = sendNotificationToUser(user, formattedMessage);
                 
                 if (notificationSent) {
@@ -206,7 +201,7 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
 
     @Override
     public boolean isListeningToTopic(String topic) {
-        return topicToContainerIdMap.containsKey(topic);
+        return topicToContainerMap.containsKey(topic);
     }
 
     /**

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button, Input, Card, Modal } from "../components/ui";
-import { userProfileApi, type UserProfile } from "../api/client";
+import { userProfileApi, debugApi, type UserProfile } from "../api/client";
 import { ApiClientError } from "../api/client";
 
 export default function ProfilePage() {
@@ -13,17 +13,18 @@ export default function ProfilePage() {
   const [telegramRecipients, setTelegramRecipients] = useState("");
 
   // State for Telegram bot activation
-  const [activationCode, setActivationCode] = useState("");
   const [chatId, setChatId] = useState("");
-  const [generatedCode, setGeneratedCode] = useState("");
-
-  // State for modals and UI
-  const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
+
+  // State for UI
   const [isSaving, setIsSaving] = useState(false);
+
+  // State for success feedback
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  // State for test notification
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
 
   // Load user profile on component mount
   useEffect(() => {
@@ -34,13 +35,16 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       setError(null);
-      const userProfile = await userProfileApi.getProfile();
-      setProfile(userProfile);
-      setTelegramRecipients(userProfile.telegramRecipients || "");
+
+      const data = await userProfileApi.getProfile();
+      setProfile(data);
+      setTelegramRecipients(data.telegramRecipients || "");
     } catch (err) {
       console.error("Failed to load profile:", err);
       setError(
-        err instanceof ApiClientError ? err.message : "Failed to load profile"
+        err instanceof ApiClientError
+          ? err.message
+          : "Failed to load profile data"
       );
     } finally {
       setLoading(false);
@@ -48,57 +52,32 @@ export default function ProfilePage() {
   };
 
   const handleSaveTelegramRecipients = async () => {
-    if (!profile) return;
-
     try {
       setIsSaving(true);
       setError(null);
 
       await userProfileApi.updateTelegramRecipients(telegramRecipients);
 
-      // Update local profile state
-      setProfile({
-        ...profile,
-        telegramRecipients: telegramRecipients,
-      });
+      // Reload profile to get updated data
+      await loadProfile();
 
       setSuccessMessage("Telegram recipients updated successfully!");
       setIsSuccessModalOpen(true);
     } catch (err) {
-      console.error("Failed to update Telegram recipients:", err);
+      console.error("Failed to update telegram recipients:", err);
       setError(
         err instanceof ApiClientError
           ? err.message
-          : "Failed to update Telegram recipients"
+          : "Failed to update telegram recipients"
       );
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleGenerateActivationCode = async () => {
-    try {
-      setIsGeneratingCode(true);
-      setError(null);
-
-      const response = await userProfileApi.generateTelegramActivationCode();
-      setGeneratedCode(response.activationCode);
-      setIsActivationModalOpen(true);
-    } catch (err) {
-      console.error("Failed to generate activation code:", err);
-      setError(
-        err instanceof ApiClientError
-          ? err.message
-          : "Failed to generate activation code"
-      );
-    } finally {
-      setIsGeneratingCode(false);
-    }
-  };
-
   const handleActivateBot = async () => {
-    if (!activationCode || !chatId) {
-      setError("Please enter both activation code and chat ID");
+    if (!chatId) {
+      setError("Please enter a valid Chat ID");
       return;
     }
 
@@ -106,15 +85,13 @@ export default function ProfilePage() {
       setIsActivating(true);
       setError(null);
 
-      await userProfileApi.activateTelegramBot(activationCode, chatId);
+      // Call API with just the chat ID
+      await userProfileApi.activateTelegramBot(chatId);
 
       // Reload profile to get updated telegram chat ID
       await loadProfile();
 
-      setIsActivationModalOpen(false);
-      setActivationCode("");
       setChatId("");
-      setGeneratedCode("");
 
       setSuccessMessage("Telegram bot activated successfully!");
       setIsSuccessModalOpen(true);
@@ -127,6 +104,31 @@ export default function ProfilePage() {
       );
     } finally {
       setIsActivating(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    try {
+      setIsTestingNotification(true);
+      setError(null);
+
+      const response = await debugApi.testNotification();
+
+      if (response.success) {
+        setSuccessMessage(response.message);
+        setIsSuccessModalOpen(true);
+      } else {
+        setError(response.error || "Failed to send test notification");
+      }
+    } catch (err) {
+      console.error("Failed to send test notification:", err);
+      if (err instanceof ApiClientError) {
+        setError(err.message);
+      } else {
+        setError("Failed to send test notification");
+      }
+    } finally {
+      setIsTestingNotification(false);
     }
   };
 
@@ -213,15 +215,17 @@ export default function ProfilePage() {
           }
           footer={
             <div className="flex justify-end space-x-3">
+              {!profile.telegramChatId && (
+                <Button
+                  variant="primary"
+                  onClick={handleActivateBot}
+                  disabled={isActivating || !chatId.trim()}
+                >
+                  {isActivating ? "Activating..." : "Activate Bot"}
+                </Button>
+              )}
               <Button
                 variant="secondary"
-                onClick={handleGenerateActivationCode}
-                disabled={isGeneratingCode}
-              >
-                {isGeneratingCode ? "Generating..." : "Setup Bot"}
-              </Button>
-              <Button
-                variant="primary"
                 onClick={handleSaveTelegramRecipients}
                 disabled={isSaving}
               >
@@ -248,11 +252,60 @@ export default function ProfilePage() {
                   : "❌ Not activated"}
               </p>
               {!profile.telegramChatId && (
-                <p className="text-sm text-blue-600 mt-1">
-                  Click "Setup Bot" to generate an activation code and link your
-                  Telegram account.
-                </p>
+                <div className="text-sm text-blue-600 mt-2 space-y-2">
+                  <p>
+                    <strong>Simple Setup:</strong>
+                  </p>
+                  <p>
+                    1. Go to Telegram and message the bot: <code>/start</code>
+                  </p>
+                  <p>2. Copy your Chat ID from the bot's response</p>
+                  <p>3. Paste it below and click "Activate Bot"</p>
+                </div>
               )}
+            </div>
+
+            {/* Simple Chat ID Input - Only show if not activated */}
+            {!profile.telegramChatId && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <Input
+                  label="Telegram Chat ID"
+                  value={chatId}
+                  onChange={(e) => setChatId(e.target.value)}
+                  placeholder="Paste your Chat ID here (e.g., 123456789)"
+                  helperText="Get this by messaging the bot with /start"
+                  fullWidth
+                />
+              </div>
+            )}
+
+            {/* Test Notification Section - Always visible now */}
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-800 font-medium mb-2">
+                🧪 Test Telegram Integration (Full Kafka Pipeline)
+              </p>
+              <p className="text-sm text-green-600 mb-3">
+                {profile.telegramChatId
+                  ? "Send a test message through: Frontend → Backend → Kafka → Consumer → Telegram"
+                  : "⚠️ Telegram not activated yet, but you can still test the Kafka pipeline (no Telegram message will be sent)"}
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleTestNotification}
+                disabled={isTestingNotification}
+                className={
+                  profile.telegramChatId
+                    ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
+                    : "bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200"
+                }
+              >
+                {isTestingNotification
+                  ? "🚀 Sending via Kafka..."
+                  : `🚀 Test Kafka Pipeline${
+                      !profile.telegramChatId ? " (No Telegram)" : ""
+                    }`}
+              </Button>
             </div>
           </div>
         </Card>
@@ -291,95 +344,6 @@ export default function ProfilePage() {
           </div>
         </Card>
       </div>
-
-      {/* Telegram Bot Activation Modal */}
-      <Modal
-        isOpen={isActivationModalOpen}
-        onClose={() => setIsActivationModalOpen(false)}
-        title="Activate Telegram Bot"
-        size="md"
-        footer={
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="secondary"
-              onClick={() => setIsActivationModalOpen(false)}
-              disabled={isActivating}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleActivateBot}
-              disabled={isActivating || !activationCode || !chatId}
-            >
-              {isActivating ? "Activating..." : "Activate"}
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {generatedCode && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-800 font-medium">
-                Your activation code:{" "}
-                <span className="font-mono text-lg">{generatedCode}</span>
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                This code expires in 10 minutes. Use it in the Telegram bot.
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <p className="text-body text-secondary-600">
-              To activate the Telegram bot:
-            </p>
-            <ol className="list-decimal list-inside text-sm text-secondary-600 space-y-1 ml-4">
-              <li>Find and start a chat with the bot in Telegram</li>
-              <li>
-                Send this command to the bot:{" "}
-                <code className="bg-secondary-100 px-1 rounded">
-                  /start {generatedCode || "YOUR_CODE"}
-                </code>
-              </li>
-              <li>The bot will respond with success and show your Chat ID</li>
-              <li>Copy the Chat ID from the bot's response</li>
-              <li>
-                Enter both the activation code and Chat ID below, then click
-                Activate
-              </li>
-            </ol>
-
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>💡 Tip:</strong> If you just send <code>/start</code>{" "}
-                (without a code) or <code>/help</code> to the bot, it will show
-                you your Chat ID and instructions.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <Input
-              label="Activation Code"
-              value={activationCode}
-              onChange={(e) => setActivationCode(e.target.value)}
-              placeholder="123456"
-              maxLength={6}
-              fullWidth
-            />
-
-            <Input
-              label="Chat ID"
-              value={chatId}
-              onChange={(e) => setChatId(e.target.value)}
-              placeholder="123456789"
-              helperText="Copy this from the bot's response after sending /start command"
-              fullWidth
-            />
-          </div>
-        </div>
-      </Modal>
 
       {/* Success Modal */}
       <Modal

@@ -36,6 +36,14 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
     List<Subscription> findByEventId(Long eventId);
     
     /**
+     * Find all subscriptions for a specific event with users eagerly fetched
+     * @param eventId the event ID
+     * @return list of subscriptions for the event with users loaded
+     */
+    @Query("SELECT s FROM Subscription s JOIN FETCH s.user WHERE s.event.id = :eventId")
+    List<Subscription> findByEventIdWithUsers(@Param("eventId") Long eventId);
+    
+    /**
      * Find all subscriptions for a user by username
      * @param username the username
      * @return list of subscriptions for the user
