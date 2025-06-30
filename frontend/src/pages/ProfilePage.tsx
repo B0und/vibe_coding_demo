@@ -335,16 +335,28 @@ export default function ProfilePage() {
               To activate the Telegram bot:
             </p>
             <ol className="list-decimal list-inside text-sm text-secondary-600 space-y-1 ml-4">
-              <li>Start a chat with the bot in Telegram</li>
+              <li>Find and start a chat with the bot in Telegram</li>
               <li>
-                Send the command:{" "}
+                Send this command to the bot:{" "}
                 <code className="bg-secondary-100 px-1 rounded">
                   /start {generatedCode || "YOUR_CODE"}
                 </code>
               </li>
-              <li>Copy your chat ID from the bot's response</li>
-              <li>Enter the activation code and chat ID below</li>
+              <li>The bot will respond with success and show your Chat ID</li>
+              <li>Copy the Chat ID from the bot's response</li>
+              <li>
+                Enter both the activation code and Chat ID below, then click
+                Activate
+              </li>
             </ol>
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Tip:</strong> If you just send <code>/start</code>{" "}
+                (without a code) or <code>/help</code> to the bot, it will show
+                you your Chat ID and instructions.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-3">

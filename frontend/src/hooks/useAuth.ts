@@ -33,8 +33,11 @@ export function useCurrentUser() {
           updatedAt: authUser.updatedAt,
         };
       } catch (error) {
-        // Don't show error toast for auth failures as they're handled differently
-        localStorage.removeItem('authToken');
+        // Only remove token for actual authentication errors (401)
+        // Don't remove for network errors or other issues
+        if (error && typeof error === 'object' && 'status' in error && error.status === 401) {
+          localStorage.removeItem('authToken');
+        }
         return null;
       }
     },
@@ -117,6 +120,7 @@ export function useAuth() {
 // Hook to check if user is authenticated (useful for route guards)
 export function useIsAuthenticated() {
   const { data: user, isLoading } = useCurrentUser();
+  
   return {
     isAuthenticated: !!user,
     isLoading,

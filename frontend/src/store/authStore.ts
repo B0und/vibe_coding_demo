@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { authApi, type AuthUser, type LoginResponse } from '../api/client';
+import { authApi, userProfileApi, type AuthUser, type LoginResponse, type UserProfile } from '../api/client';
 
 export interface User {
   id: string;
   username: string;
+  role: 'USER' | 'ADMIN';
   createdAt: string;
   updatedAt?: string;
 }
@@ -30,10 +31,15 @@ export const useUserStore = create<UserState>((set) => ({
     try {
       const response: LoginResponse = await authApi.login(username);
       
+      // After login, fetch the full profile to get role information
+      const profile: UserProfile = await userProfileApi.getProfile();
+      
       const user: User = {
-        id: response.user.id,
-        username: response.user.username,
-        createdAt: response.user.createdAt,
+        id: profile.id,
+        username: profile.username,
+        role: profile.role,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
       };
       
       set({
@@ -74,13 +80,15 @@ export const useUserStore = create<UserState>((set) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const authUser: AuthUser = await authApi.getCurrentUser();
+      // Use profile endpoint to get full user information including role
+      const profile: UserProfile = await userProfileApi.getProfile();
       
       const user: User = {
-        id: authUser.id,
-        username: authUser.username,
-        createdAt: authUser.createdAt,
-        updatedAt: authUser.updatedAt,
+        id: profile.id,
+        username: profile.username,
+        role: profile.role,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
       };
       
       set({

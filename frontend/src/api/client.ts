@@ -64,6 +64,8 @@ class ApiClient {
 
     // Add auth token if available
     const token = localStorage.getItem('authToken');
+    // Debug: Log API requests
+    // console.log('🔍 API Request:', { url: endpoint, hasToken: !!token });
     if (token) {
       config.headers = {
         ...config.headers,
@@ -307,6 +309,7 @@ export interface LoginResponse {
 export interface AuthUser {
   id: string;
   username: string;
+  role: 'USER' | 'ADMIN';
   createdAt: string;
   updatedAt?: string;
 }

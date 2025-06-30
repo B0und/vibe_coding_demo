@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -70,7 +71,8 @@ public class SecurityConfig {
                 // Allow public access to health check endpoints (common in Spring Boot)
                 .requestMatchers("/actuator/health").permitAll()
                 
-                // Require ADMIN role for event management endpoints
+                // Allow authenticated users to read events, require ADMIN for modifications
+                .requestMatchers(HttpMethod.GET, "/api/events/**").authenticated()
                 .requestMatchers("/api/events/**").hasAuthority("ADMIN")
                 
                 // Require authentication for all other endpoints

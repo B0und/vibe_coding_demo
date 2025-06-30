@@ -9,7 +9,7 @@ export default function Layout() {
   const navigation = [
     { name: "Subscriptions", href: "/subscriptions" },
     { name: "Profile", href: "/profile" },
-    // Admin route removed since we don't have role-based auth yet
+    ...(user?.role === "ADMIN" ? [{ name: "Admin", href: "/admin" }] : []),
   ];
 
   return (

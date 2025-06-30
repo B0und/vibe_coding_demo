@@ -54,9 +54,12 @@ public class TelegramBotUpdateListener extends TelegramLongPollingBot {
                 } else {
                     // For any other message, provide guidance
                     telegramBotService.sendMessage(chatId, 
-                        "👋 Hello! To activate notifications, use: /start <activation_code>\n" +
-                        "Get your activation code from the web application.\n\n" +
-                        "Need help? Use /help for more information.");
+                        "👋 Hello! I'm the VibeCodeDemo Bot.\n\n" +
+                        "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
+                        "To activate notifications:\n" +
+                        "• Use: <code>/start YOUR_ACTIVATION_CODE</code>\n" +
+                        "• Get your activation code from the web application\n\n" +
+                        "Commands: /start, /help");
                 }
             }
         } catch (Exception e) {
@@ -71,14 +74,19 @@ public class TelegramBotUpdateListener extends TelegramLongPollingBot {
     private void handleHelpCommand(String chatId) {
         String helpMessage = 
             "🤖 <b>VibeCodeDemo Bot Help</b>\n\n" +
+            "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
             "<b>Commands:</b>\n" +
-            "• /start &lt;code&gt; - Activate notifications with your activation code\n" +
-            "• /help - Show this help message\n\n" +
+            "• <code>/start</code> - Show your Chat ID and activation instructions\n" +
+            "• <code>/start &lt;code&gt;</code> - Activate notifications with your activation code\n" +
+            "• <code>/help</code> - Show this help message\n\n" +
             "<b>How to get started:</b>\n" +
             "1. Log in to the web application\n" +
-            "2. Generate an activation code\n" +
-            "3. Send /start &lt;your_code&gt; to this bot\n" +
-            "4. You'll receive event notifications here!\n\n" +
+            "2. Go to your Profile page\n" +
+            "3. Click \"Setup Bot\" to generate an activation code\n" +
+            "4. Send <code>/start YOUR_CODE</code> to this bot\n" +
+            "5. You'll receive event notifications here!\n\n" +
+            "<b>Your Chat ID is:</b> <code>" + chatId + "</code>\n" +
+            "Save this ID - you might need it for manual setup.\n\n" +
             "Need support? Contact the application administrator.";
         
         telegramBotService.sendMessage(chatId, helpMessage);

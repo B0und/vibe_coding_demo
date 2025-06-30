@@ -108,8 +108,23 @@ public class TelegramBotService {
             
             // Parse the activation code from the command
             String[] parts = text.trim().split("\\s+");
+            if (parts.length == 1 && "/start".equals(parts[0])) {
+                // No activation code provided, show help
+                sendMessage(chatId, 
+                    "👋 Welcome to VibeCodeDemo Bot!\n\n" +
+                    "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
+                    "To activate notifications:\n" +
+                    "1. Get your activation code from the web app\n" +
+                    "2. Send: <code>/start YOUR_CODE</code>\n\n" +
+                    "Need help? Use /help");
+                return;
+            }
+            
             if (parts.length != 2 || !"/start".equals(parts[0])) {
-                sendMessage(chatId, "❌ Invalid command format. Please use: /start <activation_code>");
+                sendMessage(chatId, 
+                    "❌ Invalid command format.\n\n" +
+                    "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
+                    "Please use: <code>/start YOUR_ACTIVATION_CODE</code>");
                 return;
             }
             
@@ -118,17 +133,27 @@ public class TelegramBotService {
             // Validate and activate the bot
             userService.activateTelegramBot(activationCode, chatId);
             
-            // Send success message
-            sendMessage(chatId, "✅ Bot activated successfully! You will now receive notifications.");
+            // Send success message with chat ID confirmation
+            sendMessage(chatId, 
+                "✅ <b>Bot activated successfully!</b>\n\n" +
+                "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n" +
+                "🔔 You will now receive event notifications here.\n\n" +
+                "The bot is ready to send you updates!");
             
             logger.info("Bot activated successfully for chat ID: {}", chatId);
             
         } catch (IllegalArgumentException e) {
             logger.warn("Activation failed for chat ID {}: {}", chatId, e.getMessage());
-            sendMessage(chatId, "❌ " + e.getMessage());
+            sendMessage(chatId, 
+                "❌ " + e.getMessage() + "\n\n" +
+                "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
+                "Please check your activation code and try again.");
         } catch (Exception e) {
             logger.error("Error handling start command for chat ID {}: {}", chatId, e.getMessage(), e);
-            sendMessage(chatId, "❌ An error occurred while activating the bot. Please try again.");
+            sendMessage(chatId, 
+                "❌ An error occurred while activating the bot.\n\n" +
+                "🆔 <b>Your Chat ID:</b> <code>" + chatId + "</code>\n\n" +
+                "Please try again or contact support.");
         }
     }
     
