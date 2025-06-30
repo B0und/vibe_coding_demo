@@ -21,8 +21,8 @@ public class CacheConfig {
                 .expireAfterWrite(Duration.ofMinutes(10))
                 .maximumSize(1000));
         
-        // Pre-register the activationCodes cache
-        cacheManager.setCacheNames(Set.of("activationCodes"));
+        // Pre-register the caches used by the application
+        cacheManager.setCacheNames(Set.of("activationCodes", "users"));
         
         return cacheManager;
     }

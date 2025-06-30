@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,26 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
     
     // Keep track of active containers by topic
     private final ConcurrentMap<String, ConcurrentMessageListenerContainer<String, String>> topicToContainerMap = new ConcurrentHashMap<>();
+
+    /**
+     * Simple data holder for user notification information
+     * to avoid Hibernate lazy loading issues
+     */
+    private static class UserNotificationData {
+        private final String username;
+        private final String telegramChatId;
+        private final String telegramRecipients;
+        
+        public UserNotificationData(String username, String telegramChatId, String telegramRecipients) {
+            this.username = username;
+            this.telegramChatId = telegramChatId;
+            this.telegramRecipients = telegramRecipients;
+        }
+        
+        public String getUsername() { return username; }
+        public String getTelegramChatId() { return telegramChatId; }
+        public String getTelegramRecipients() { return telegramRecipients; }
+    }
 
     @Autowired
     public KafkaListenerServiceImpl(
@@ -166,22 +187,29 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             // 4. Format the message for Telegram
             String formattedMessage = formatMessageForTelegram(kafkaMessage, event);
             
-            // 5. Send notifications to all subscribed users
+            // 5. Extract user data and send notifications (to avoid Hibernate lazy loading issues)
             int successCount = 0;
             int failureCount = 0;
             
+            // Extract user data within transaction to avoid lazy loading issues
+            List<UserNotificationData> userDataList = new ArrayList<>();
             for (Subscription subscription : subscriptions) {
                 User user = subscription.getUser();
                 
-                // Force loading of User properties within transaction to avoid lazy loading issues
+                // Extract user data into simple objects within transaction
                 String username = user.getUsername();
                 String telegramChatId = user.getTelegramChatId();
                 String telegramRecipients = user.getTelegramRecipients();
                 
-                logger.debug("Processing notification for user: {} (chatId: {}, recipients: {})", 
+                logger.debug("Extracted notification data for user: {} (chatId: {}, recipients: {})", 
                     username, telegramChatId, telegramRecipients);
                 
-                boolean notificationSent = sendNotificationToUser(user, formattedMessage);
+                userDataList.add(new UserNotificationData(username, telegramChatId, telegramRecipients));
+            }
+            
+            // Send notifications using extracted data (no Hibernate entities involved)
+            for (UserNotificationData userData : userDataList) {
+                boolean notificationSent = sendNotificationToUser(userData, formattedMessage);
                 
                 if (notificationSent) {
                     successCount++;
@@ -306,30 +334,30 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
     /**
      * Send notification to a specific user via their configured Telegram recipients.
      * 
-     * @param user the user to send notification to
+     * @param userData the user data to send notification to
      * @param message the formatted message
      * @return true if at least one notification was sent successfully, false otherwise
      */
-    private boolean sendNotificationToUser(User user, String message) {
+    private boolean sendNotificationToUser(UserNotificationData userData, String message) {
         boolean atLeastOneSuccess = false;
         
         try {
             // Check if user has telegram chat ID (bot activation)
-            if (user.getTelegramChatId() != null && !user.getTelegramChatId().trim().isEmpty()) {
-                boolean sent = telegramBotService.sendMessage(user.getTelegramChatId(), message);
+            if (userData.getTelegramChatId() != null && !userData.getTelegramChatId().trim().isEmpty()) {
+                boolean sent = telegramBotService.sendMessage(userData.getTelegramChatId(), message);
                 if (sent) {
                     atLeastOneSuccess = true;
                     logger.debug("Notification sent to user '{}' via bot chat ID: {}", 
-                        user.getUsername(), user.getTelegramChatId());
+                        userData.getUsername(), userData.getTelegramChatId());
                 } else {
                     logger.warn("Failed to send notification to user '{}' via bot chat ID: {}", 
-                        user.getUsername(), user.getTelegramChatId());
+                        userData.getUsername(), userData.getTelegramChatId());
                 }
             }
             
             // Also send to additional telegram recipients if configured
-            if (user.getTelegramRecipients() != null && !user.getTelegramRecipients().trim().isEmpty()) {
-                String[] recipients = user.getTelegramRecipients().split(";");
+            if (userData.getTelegramRecipients() != null && !userData.getTelegramRecipients().trim().isEmpty()) {
+                String[] recipients = userData.getTelegramRecipients().split(";");
                 for (String recipient : recipients) {
                     recipient = recipient.trim();
                     if (!recipient.isEmpty()) {
@@ -337,10 +365,10 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
                         if (sent) {
                             atLeastOneSuccess = true;
                             logger.debug("Notification sent to user '{}' via recipient: {}", 
-                                user.getUsername(), recipient);
+                                userData.getUsername(), recipient);
                         } else {
                             logger.warn("Failed to send notification to user '{}' via recipient: {}", 
-                                user.getUsername(), recipient);
+                                userData.getUsername(), recipient);
                         }
                     }
                 }
@@ -348,11 +376,11 @@ public class KafkaListenerServiceImpl implements KafkaListenerService {
             
             if (!atLeastOneSuccess) {
                 logger.warn("No telegram recipients configured for user '{}' or all sends failed", 
-                    user.getUsername());
+                    userData.getUsername());
             }
             
         } catch (Exception e) {
-            logger.error("Error sending notification to user '{}': {}", user.getUsername(), e.getMessage(), e);
+            logger.error("Error sending notification to user '{}': {}", userData.getUsername(), e.getMessage(), e);
         }
         
         return atLeastOneSuccess;

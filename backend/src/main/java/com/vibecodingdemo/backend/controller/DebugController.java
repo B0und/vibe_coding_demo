@@ -75,12 +75,24 @@ public class DebugController {
     @PostMapping("/test-notification")
     public ResponseEntity<Map<String, Object>> testNotification(Authentication authentication) {
         try {
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "User not authenticated"));
+            // For debug endpoint, use authentication if available, otherwise use default test user
+            String username;
+            if (authentication != null && authentication.isAuthenticated()) {
+                username = authentication.getName();
+            } else {
+                // Use default test user for debugging - find any user with Telegram configured
+                List<User> allUsers = userService.getAllUsers();
+                Optional<User> testUser = allUsers.stream()
+                    .filter(u -> u.getTelegramChatId() != null && !u.getTelegramChatId().trim().isEmpty())
+                    .findFirst();
+                
+                if (testUser.isEmpty()) {
+                    return ResponseEntity.badRequest()
+                        .body(Map.of("error", "No users found with Telegram configured. Please activate Telegram for at least one user."));
+                }
+                username = testUser.get().getUsername();
+                logger.info("Using test user {} for debug notification (no authentication provided)", username);
             }
-
-            String username = authentication.getName();
             logger.info("Testing notification via Kafka pipeline for user: {}", username);
 
             // Get the current user

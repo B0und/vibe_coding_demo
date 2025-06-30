@@ -1,0 +1,38 @@
+# Gradle build outputs
+build/
+.gradle/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Test outputs
+target/
+
+# Environment files
+.env
+.env.local
+
+# Documentation
+README.md
+*.md
+
+# Docker files (not needed in build context)
+Dockerfile
+.dockerignore
+docker-compose.yml 

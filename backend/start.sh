@@ -1,14 +1,11 @@
 #!/bin/bash
 echo "=== Starting Backend Application ==="
-echo "Contents of build/libs directory:"
-ls -la build/libs/
-echo ""
 
-# Find the JAR file (exclude -plain.jar files)
-JAR_FILE=$(find build/libs -name "*.jar" -type f ! -name "*-plain.jar" | head -1)
+# Use the JAR file copied as app.jar
+JAR_FILE="app.jar"
 
-if [ -z "$JAR_FILE" ]; then
-    echo "ERROR: No JAR file found in build/libs/"
+if [ ! -f "$JAR_FILE" ]; then
+    echo "ERROR: JAR file not found: $JAR_FILE"
     exit 1
 fi
 

@@ -1,10 +1,12 @@
 package com.vibecodingdemo.backend.service;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.vibecodingdemo.backend.entity.User;
 import com.vibecodingdemo.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -12,6 +14,7 @@ import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,11 +32,14 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Register a new user with the given username, or return existing user if already exists
-     * @param username the username for the user
-     * @return the user (either newly created or existing)
-     * @throws IllegalArgumentException if username is null or empty
+     * Get all users
+     * @return list of all users
      */
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @CacheEvict(value = "users", key = "#username")
     public User registerUser(String username) {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
@@ -55,6 +61,7 @@ public class UserService implements UserDetailsService {
      * @param username the username to search for
      * @return Optional containing the user if found, empty otherwise
      */
+    @Cacheable(value = "users", key = "#username")
     public Optional<User> findByUsername(String username) {
         if (username == null || username.trim().isEmpty()) {
             return Optional.empty();
@@ -99,6 +106,7 @@ public class UserService implements UserDetailsService {
      * @param recipients semicolon-separated list of Telegram recipients
      * @throws IllegalArgumentException if user is not found
      */
+    @CacheEvict(value = "users", key = "#username")
     public void updateTelegramRecipients(String username, String recipients) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
@@ -123,7 +131,7 @@ public class UserService implements UserDetailsService {
         String activationCode = String.valueOf(code);
 
         // Store in cache with username as key
-        Cache cache = cacheManager.getCache("activationCodes");
+        org.springframework.cache.Cache cache = cacheManager.getCache("activationCodes");
         if (cache != null) {
             cache.put(username, activationCode);
         }
@@ -137,8 +145,9 @@ public class UserService implements UserDetailsService {
      * @param chatId the Telegram chat ID
      * @throws IllegalArgumentException if code is invalid or expired
      */
+    @CacheEvict(value = "users", allEntries = true) // Clear all user cache since we don't know which user
     public void activateTelegramBot(String code, String chatId) {
-        Cache cache = cacheManager.getCache("activationCodes");
+        org.springframework.cache.Cache cache = cacheManager.getCache("activationCodes");
         if (cache == null) {
             throw new IllegalArgumentException("Cache not available");
         }
@@ -149,8 +158,8 @@ public class UserService implements UserDetailsService {
             (com.github.benmanes.caffeine.cache.Cache<Object, Object>) cache.getNativeCache();
         
         for (Object key : nativeCache.asMap().keySet()) {
-            String cachedCode = cache.get(key, String.class);
-            if (code.equals(cachedCode)) {
+            Object cachedValue = cache.get(key);
+            if (cachedValue != null && code.equals(cachedValue.toString())) {
                 foundUsername = (String) key;
                 break;
             }
@@ -170,7 +179,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
 
         // Remove the used activation code from cache
-        cache.evict(username);
+        cache.evictIfPresent(username);
     }
 
     /**
@@ -179,6 +188,7 @@ public class UserService implements UserDetailsService {
      * @param chatId the Telegram chat ID
      * @throws IllegalArgumentException if user is not found
      */
+    @CacheEvict(value = "users", key = "#username")
     public void activateTelegramBotDirect(String username, String chatId) {
         // Update user's Telegram chat ID directly
         User user = userRepository.findByUsername(username)
@@ -194,6 +204,7 @@ public class UserService implements UserDetailsService {
      * @return the created admin user
      * @throws IllegalArgumentException if username is null or empty, or if user already exists
      */
+    @CacheEvict(value = "users", key = "#username")
     public User createAdminUser(String username) {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("Username cannot be null or empty");
@@ -215,6 +226,7 @@ public class UserService implements UserDetailsService {
      * @param username the username of the user to promote
      * @throws IllegalArgumentException if user is not found
      */
+    @CacheEvict(value = "users", key = "#username")
     public void promoteToAdmin(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
@@ -228,6 +240,7 @@ public class UserService implements UserDetailsService {
      * @param username the username to check
      * @return true if user is admin, false otherwise
      */
+    @Cacheable(value = "users", key = "#username")
     public boolean isAdmin(String username) {
         return userRepository.findByUsername(username)
                 .map(user -> user.getRole() == User.Role.ADMIN)
